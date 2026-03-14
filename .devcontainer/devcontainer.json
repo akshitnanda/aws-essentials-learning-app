@@ -1,0 +1,33 @@
+{
+  "name": "aws-learn",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:1-22-bookworm",
+  "forwardPorts": [3000, 5000],
+  "portsAttributes": {
+    "3000": {
+      "label": "React app",
+      "onAutoForward": "openPreview"
+    },
+    "5000": {
+      "label": "Express API",
+      "onAutoForward": "silent"
+    }
+  },
+  "postCreateCommand": "npm install && npm --prefix client install && npm --prefix server install",
+  "customizations": {
+    "codespaces": {
+      "openFiles": [
+        "README.md",
+        "client/src/App.js"
+      ]
+    },
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode"
+      ],
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash"
+      }
+    }
+  }
+}

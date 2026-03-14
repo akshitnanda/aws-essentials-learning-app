@@ -1,0 +1,3320 @@
+[
+  {
+    "id": 1,
+    "day": 1,
+    "title": "Introduction to AWS",
+    "content": "Explore the AWS global infrastructure, understanding regions, availability zones, and edge locations. Learn why enterprises trust AWS with mission-critical workloads and how to think about cloud architecture.",
+    "prerequisites": [],
+    "estimatedTime": 45,
+    "useCase": "Multi-region deployment for a financial services platform requiring failover across geographies and sub-50ms latency for trading.",
+    "pitfalls": [
+      "Assuming all regions have same service availability - check service quotas per region",
+      "Not planning for cross-region data transfer costs - can exceed storage costs",
+      "Placing all resources in single AZ, then surprised by availability issues"
+    ],
+    "relatedServices": [
+      "ec2",
+      "s3",
+      "cloudfront",
+      "route53"
+    ],
+    "resources": [
+      {
+        "type": "docs",
+        "title": "AWS Global Infrastructure",
+        "url": "https://aws.amazon.com/about-aws/global-infrastructure/"
+      },
+      {
+        "type": "whitepaper",
+        "title": "AWS Well-Architected Framework",
+        "url": "https://docs.aws.amazon.com/wellarchitected/latest/userguide/"
+      },
+      {
+        "type": "video",
+        "title": "re:Invent 2023: AWS Infrastructure Overview",
+        "url": "https://aws.amazon.com/events/reinvent/"
+      },
+      {
+        "type": "calculator",
+        "title": "AWS Pricing Calculator",
+        "url": "https://calculator.aws/"
+      }
+    ],
+    "keyPoints": [
+      "24 regions, 76 availability zones",
+      "Edge locations for CloudFront",
+      "High availability by design",
+      "Global reach, local latency"
+    ]
+  },
+  {
+    "id": 2,
+    "day": 2,
+    "title": "AWS Account Setup & IAM",
+    "content": "Secure your AWS account from day one. Master Identity & Access Management (IAM): users, groups, roles, and policies. Learn the principle of least privilege and multi-factor authentication.",
+    "prerequisites": [
+      1
+    ],
+    "estimatedTime": 60,
+    "useCase": "Enterprise multi-account strategy: separate dev/staging/prod with CrossAccount roles for teams, audit trails for compliance (SOC2, PCI-DSS).",
+    "pitfalls": [
+      "Using root account for daily operations - can't track actions, can't revoke, security nightmare",
+      "Overly permissive policies like s3:* - should specify bucket ARNs and actions",
+      "Hardcoding credentials in code or config - use IAM roles and STS tokens instead",
+      "Not rotating access keys - plan for key rotation every 90 days minimum"
+    ],
+    "relatedServices": [
+      "sts",
+      "kms",
+      "secretsmanager",
+      "cloudtrail"
+    ],
+    "resources": [
+      {
+        "type": "docs",
+        "title": "IAM Best Practices",
+        "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html"
+      },
+      {
+        "type": "docs",
+        "title": "IAM Policy Simulator",
+        "url": "https://policysim.aws.amazon.com/"
+      },
+      {
+        "type": "whitepaper",
+        "title": "Security Best Practices",
+        "url": "https://aws.amazon.com/architecture/security-identity-compliance/"
+      },
+      {
+        "type": "example",
+        "title": "Cross-Account Access Setup",
+        "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/tutorial_cross_account_with_roles.html"
+      }
+    ],
+    "keyPoints": [
+      "Root account protection",
+      "IAM users vs roles vs service principals",
+      "Least privilege principle",
+      "MFA for all users",
+      "AssumeRole for cross-account"
+    ]
+  },
+  {
+    "id": 3,
+    "day": 3,
+    "title": "EC2 Fundamentals",
+    "content": "Master Elastic Compute Cloud: instance types, lifecycle management, security groups, and scaling strategies. Understand pricing models (on-demand, reserved, spot) and when to use each.",
+    "prerequisites": [
+      1,
+      2
+    ],
+    "estimatedTime": 90,
+    "useCase": "Web application stack: t4g.medium for burstable web tier, c6i.xlarge for CPU-bound search indexing, spot instances for batch jobs. Multi-AZ Auto Scaling Groups with target group health checks.",
+    "pitfalls": [
+      "Over-provisioning instance size - start smaller, scale up based on CloudWatch metrics",
+      "Ignoring IMDSv2 - always use metadata service v2 for protection against SSRF",
+      "Not using security groups as stateful firewalls - many configure TCP/IP when they should use security groups",
+      "Mixing Spot instances with reserved instances without understanding availability risk",
+      "Launching in single AZ - makes multi-AZ trivial with ASGs but people often skip it"
+    ],
+    "relatedServices": [
+      "autoscaling",
+      "elb",
+      "cloudwatch",
+      "ssm"
+    ],
+    "resources": [
+      {
+        "type": "docs",
+        "title": "EC2 Instance Types",
+        "url": "https://aws.amazon.com/ec2/instance-types/"
+      },
+      {
+        "type": "docs",
+        "title": "EC2 Pricing Options",
+        "url": "https://aws.amazon.com/ec2/pricing/"
+      },
+      {
+        "type": "whitepaper",
+        "title": "Right-Sizing Your Instances",
+        "url": "https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/cost_opt_instances.html"
+      },
+      {
+        "type": "video",
+        "title": "EC2 Auto Scaling Deep Dive",
+        "url": "https://aws.amazon.com/blogs/compute/"
+      },
+      {
+        "type": "calculator",
+        "title": "EC2 Cost Calculator",
+        "url": "https://calculator.aws/#/addService/ec2"
+      }
+    ],
+    "keyPoints": [
+      "Graviton2 (t4g, c7g) - better performance per dollar",
+      "Reserved Instances: 1-year saves 40%, 3-year saves 66%",
+      "Spot instances: 70-90% discount for interruption-tolerant workloads",
+      "IMDSv2 mandatory for production",
+      "Auto Scaling Groups drive high availability"
+    ]
+  },
+  {
+    "id": 4,
+    "day": 4,
+    "title": "Storage Solutions: S3",
+    "content": "Simple Storage Service: durability, scalability, and cost-effectiveness. Learn storage classes, versioning, bucket policies, and lifecycle management for data optimization.",
+    "prerequisites": [
+      1
+    ],
+    "estimatedTime": 75,
+    "useCase": "Multi-tier data lake: hot parquet files in S3 Standard, warm data in Intelligent-Tiering, cold backups in Glacier Deep Archive. Lifecycle transitions after 30/90 days. Versioning + MFA Delete for compliance.",
+    "pitfalls": [
+      "Not enabling versioning - one accidental delete and data is gone",
+      "Using Standard for everything - costs spiral: should use Intelligent-Tiering for unknown access patterns",
+      "Glacier retrieval fees not budgeted - standard retrieval 3-5 hours, bulk retrieval 5-12 hours, expedited $$$",
+      "Bucket policies too permissive (s3:*) - always specify actions + resource ARNs",
+      "Not using block public access settings - prevents accidental public exposure"
+    ],
+    "relatedServices": [
+      "cloudfront",
+      "athena",
+      "glacier",
+      "datasync"
+    ],
+    "resources": [
+      {
+        "type": "docs",
+        "title": "S3 Storage Classes",
+        "url": "https://aws.amazon.com/s3/storage-classes/"
+      },
+      {
+        "type": "docs",
+        "title": "S3 Lifecycle Policies",
+        "url": "https://docs.aws.amazon.com/s3/latest/userguide/object-lifecycle-mgmt.html"
+      },
+      {
+        "type": "whitepaper",
+        "title": "S3 Cost Optimization",
+        "url": "https://aws.amazon.com/s3/cost-optimization/"
+      },
+      {
+        "type": "example",
+        "title": "Versioning + MFA Delete Setup",
+        "url": "https://docs.aws.amazon.com/s3/latest/userguide/versioning-workflows.html"
+      },
+      {
+        "type": "calculator",
+        "title": "S3 Pricing & Lifecycle Simulator",
+        "url": "https://calculator.aws/#/addService/s3"
+      }
+    ],
+    "keyPoints": [
+      "11 9s durability (SLA 99.99% availability)",
+      "Intelligent-Tiering for variable access patterns",
+      "Glacier Deep Archive: $1.35/TB/month",
+      "Lifecycle policies save 70% on inactive data",
+      "Block All Public Access as default"
+    ]
+  },
+  {
+    "id": 5,
+    "day": 5,
+    "title": "Networking Basics",
+    "content": "Virtual Private Cloud (VPC): design, subnets, security groups, NACLs. Understand public/private subnets, NAT gateways, and VPC peering for multi-tier architectures.",
+    "prerequisites": [
+      1,
+      2
+    ],
+    "estimatedTime": 75,
+    "useCase": "Typical web tier: public subnet with ALB, private subnet with app servers, isolated RDS subnet. NAT Gateway for private outbound. VPC Flow Logs for security troubleshooting.",
+    "pitfalls": [
+      "Confusing stateful (SGG) vs stateless (NACL) rules - security groups cover 90% of use cases",
+      "Not using private subnets for databases - exposed RDS is a data breach waiting to happen",
+      "Single NAT Gateway in one AZ - no HA, use NAT Gateway in each AZ and route accordingly",
+      "CIDR overlap with corporate networks - always subnet plan with 10.0.0.0/8 to avoid conflicts",
+      "Forgetting that IGW + 0.0.0.0/0 route = internet access - be explicit about what's exposed"
+    ],
+    "relatedServices": [
+      "elb",
+      "nat",
+      "transitgateway",
+      "vpnconnection"
+    ],
+    "resources": [
+      {
+        "type": "docs",
+        "title": "VPC User Guide",
+        "url": "https://docs.aws.amazon.com/vpc/latest/userguide/"
+      },
+      {
+        "type": "docs",
+        "title": "Security Groups vs NACLs",
+        "url": "https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Security.html"
+      },
+      {
+        "type": "whitepaper",
+        "title": "AWS VPC Connectivity Options",
+        "url": "https://docs.aws.amazon.com/whitepapers/latest/aws-vpc-connectivity-options/"
+      },
+      {
+        "type": "example",
+        "title": "Multi-AZ VPC with NAT",
+        "url": "https://docs.aws.amazon.com/vpc/latest/userguide/vpc-example-web-database.html"
+      }
+    ],
+    "keyPoints": [
+      "10.0.0.0/8 as default CIDR",
+      "Security groups are stateful firewalls",
+      "NACLs for per-subnet rules (rarely needed)",
+      "NAT Gateway: $32/month + data charges",
+      "Flow Logs for security troubleshooting"
+    ]
+  },
+  {
+    "id": 6,
+    "day": 6,
+    "title": "Relational Databases: RDS",
+    "content": "AWS Managed Relational Database Service: RDS for PostgreSQL, MySQL, MariaDB, Oracle, SQL Server. Master multi-AZ deployments, read replicas, backup strategies, and database optimization.",
+    "prerequisites": [
+      3,
+      5
+    ],
+    "estimatedTime": 90,
+    "useCase": "SaaS product with PostgreSQL: multi-AZ for automatic failover, read replicas for analytics queries (cross-region for DR), automated backups + manual snapshots. Aurora Serverless for variable workloads.",
+    "pitfalls": [
+      "Using RDS single-AZ in production - one AZ failure = full database outage, multi-AZ costs $$ but saves customers",
+      "Read replica failover is manual, not automatic - use Aurora for automatic failover",
+      "Backup window during peak traffic - worst time for snapshot creation, schedule 2-4 AM UTC",
+      "Not testing restore from backup - backups are worthless if restore fails (test quarterly)",
+      "Storage autoscaling disabled - databases grow, should enable 20% threshold autoscaling"
+    ],
+    "relatedServices": [
+      "dms",
+      "secretsmanager",
+      "certificatemanager",
+      "route53"
+    ],
+    "resources": [
+      {
+        "type": "docs",
+        "title": "RDS Multi-AZ Deployments",
+        "url": "https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.MultiAZ.html"
+      },
+      {
+        "type": "docs",
+        "title": "Read Replicas vs Aurora",
+        "url": "https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_ReadRepl.html"
+      },
+      {
+        "type": "whitepaper",
+        "title": "Database Performance on AWS",
+        "url": "https://aws.amazon.com/rds/resources/"
+      },
+      {
+        "type": "video",
+        "title": "RDS Deep Dive",
+        "url": "https://aws.amazon.com/blogs/database/"
+      },
+      {
+        "type": "example",
+        "title": "Aurora Serverless Setup",
+        "url": "https://docs.aws.amazon.com/AmazonRDS/latest/AuroraMySQLReleaseNotes/Aurora.ServerlessV2.html"
+      }
+    ],
+    "keyPoints": [
+      "Aurora: MySQL/PostgreSQL-compatible with automatic scaling",
+      "Multi-AZ: synchronous replication, automatic failover",
+      "Read Replicas: asynchronous, manual failover",
+      "Backups: 35-day retention by default",
+      "Performance Insights: database monitoring"
+    ]
+  },
+  {
+    "id": 7,
+    "day": 7,
+    "title": "NoSQL: DynamoDB",
+    "content": "DynamoDB: fully managed NoSQL database for predictable performance at any scale. Master table design, global secondary indexes, DynamoDB Streams, and cost optimization.",
+    "prerequisites": [
+      1
+    ],
+    "estimatedTime": 75,
+    "useCase": "Real-time user session store: partition key = userId, sort key = timestamp. GSI with inverse (timestamp, userId) for querying \"last 100 sessions\". DynamoDB Streams to Lambda for real-time ETL to S3/Redshift.",
+    "pitfalls": [
+      "Hot partition key (e.g., status=ACTIVE) - all writes go to one partition, throttled. Use random prefix + query all 8 prefixes if needed",
+      "Designing for SQL queries in NoSQL - denormalize instead, duplicate data across GSIs",
+      "Not using DynamoDB Streams - they're free and unlock real-time pipelines to Lambda/Kinesis",
+      "Provisioned capacity without understanding traffic - on-demand better for unpredictable, provisioned for steady-state",
+      "Large item scans in GSI - table can have billions of items, scans are expensive. Always use key conditions, not filters"
+    ],
+    "relatedServices": [
+      "kinesis",
+      "lambda",
+      "eventbridge",
+      "glue"
+    ],
+    "resources": [
+      {
+        "type": "docs",
+        "title": "DynamoDB Best Practices",
+        "url": "https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/best-practices.html"
+      },
+      {
+        "type": "docs",
+        "title": "Global Secondary Indexes",
+        "url": "https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GSI.html"
+      },
+      {
+        "type": "whitepaper",
+        "title": "NoSQL for Enterprise",
+        "url": "https://aws.amazon.com/dynamodb/resources/"
+      },
+      {
+        "type": "video",
+        "title": "DynamoDB Performance Tuning",
+        "url": "https://aws.amazon.com/blogs/database/amazon-dynamodb-deep-dive/"
+      },
+      {
+        "type": "calculator",
+        "title": "DynamoDB Capacity Calculator",
+        "url": "https://calculator.aws/#/addService/dynamodb"
+      }
+    ],
+    "keyPoints": [
+      "Partition key = distribution, sort key = ordering",
+      "On-demand: pay per request, unpredictable; provisioned: capacity units, steady",
+      "GSI unlocks different access patterns",
+      "DynamoDB Streams for CDC",
+      "DAX for <10ms latency"
+    ]
+  },
+  {
+    "id": 8,
+    "day": 8,
+    "title": "Caching & Content Delivery",
+    "content": "ElastiCache (Redis/Memcached) for in-memory caching, CloudFront for content delivery network. Learn cache invalidation, edge caching, and latency optimization.",
+    "prerequisites": [
+      4,
+      5
+    ],
+    "estimatedTime": 75,
+    "useCase": "E-commerce site: CloudFront caches product pages (1-hour TTL), Redis session store (2-hour expiry), Lambda@Edge for regional pricing logic. Cache hit ratio >80% reduces load by 10x.",
+    "pitfalls": [
+      "Cache invalidation is hard - Phil Karlton said \"two hardest things in CS are naming and cache invalidation\". Plan TTLs before going live",
+      "Redis persistence not enabled - crash = data loss. Enable AOF for production, trade-off latency for data safety",
+      "CloudFront caching for dynamic content - 1-hour TTL on user dashboard = stale data. Use Cache-Control headers from origin",
+      "Cache stampede: all requests miss at once on expiry - implement probabilistic expiry or write-through pattern",
+      "Not using ElastiCache connection pooling - connection overhead eats throughput, always pool"
+    ],
+    "relatedServices": [
+      "lambda@edge",
+      "secretsmanager",
+      "kinesis",
+      "apigateway"
+    ],
+    "resources": [
+      {
+        "type": "docs",
+        "title": "ElastiCache Best Practices",
+        "url": "https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/BestPractices.html"
+      },
+      {
+        "type": "docs",
+        "title": "CloudFront Caching",
+        "url": "https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/"
+      },
+      {
+        "type": "whitepaper",
+        "title": "Caching Strategies on AWS",
+        "url": "https://aws.amazon.com/builders/select/caching/"
+      },
+      {
+        "type": "example",
+        "title": "Redis Cluster Mode Setup",
+        "url": "https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/cluster-mode.html"
+      }
+    ],
+    "keyPoints": [
+      "Redis > Memcached for most use cases",
+      "CloudFront: 600+ edge locations, <100ms latency",
+      "Cache Headers: ETag, Last-Modified, Cache-Control",
+      "Cluster mode: horizontal sharding",
+      "Lambda@Edge: compute at edge"
+    ]
+  },
+  {
+    "id": 9,
+    "day": 9,
+    "title": "Serverless Computing: Lambda",
+    "content": "AWS Lambda: event-driven compute, pay-per-request, no servers to manage. Master function lifecycle, concurrency limits, cold starts, and integration with AWS services.",
+    "prerequisites": [
+      3,
+      5
+    ],
+    "estimatedTime": 90,
+    "useCase": "Async image processing: S3 upload triggers Lambda, resizes images (MediaConvert), metadata to DynamoDB, notification to SNS. Scales to millions of images, costs pennies.",
+    "pitfalls": [
+      "Cold starts on first invocation - 1-2s Java/C#, 100-500ms Python. Critical? Use provisioned concurrency or move to container",
+      "Lambda timeout at 15 minutes - SQS jobs longer than 15min must use SQS Long Polling + batch, not direct invoke",
+      "No persistent state - variables don't persist across invocations. Use external storage (RDS, ElastiCache, S3)",
+      "Over-generous concurrency - default 1000 concurrent, can exhaust database connections. Use ReservedConcurrentExecutions",
+      "Forgetting to set CORS headers from Lambda response - API Gateway Lambda integration needs explicit CORS"
+    ],
+    "relatedServices": [
+      "apigateway",
+      "sqs",
+      "sns",
+      "sagemakerfeatures"
+    ],
+    "resources": [
+      {
+        "type": "docs",
+        "title": "Lambda Best Practices",
+        "url": "https://docs.aws.amazon.com/lambda/latest/dg/best-practices.html"
+      },
+      {
+        "type": "docs",
+        "title": "Lambda Concurrency and Throttling",
+        "url": "https://docs.aws.amazon.com/lambda/latest/dg/concurrency.html"
+      },
+      {
+        "type": "whitepaper",
+        "title": "Serverless Architecture Patterns",
+        "url": "https://aws.amazon.com/serverless/"
+      },
+      {
+        "type": "video",
+        "title": "Lambda Cold Start Deep Dive",
+        "url": "https://aws.amazon.com/blogs/compute/operating-lambda-performance-optimization/"
+      },
+      {
+        "type": "calculator",
+        "title": "Lambda Pricing",
+        "url": "https://calculator.aws/#/addService/lambda"
+      }
+    ],
+    "keyPoints": [
+      "15-minute timeout",
+      "10GB max memory",
+      "Pay $0.20 per 1M requests",
+      "Cold starts: 100-2000ms depending on language",
+      "Provisioned Concurrency for predictable latency"
+    ]
+  },
+  {
+    "id": 10,
+    "day": 10,
+    "title": "API Design & Gateway",
+    "content": "API Gateway: create, publish, and manage RESTful and WebSocket APIs. Learn throttling, authorization (API keys, Cognito, Lambda authorizers), and monitoring.",
+    "prerequisites": [
+      3,
+      5,
+      9
+    ],
+    "estimatedTime": 75,
+    "useCase": "SaaS API: API Gateway with API key throttling (10k RPS per tier), Cognito authorizer, Lambda + RDS backend. API Gateway caches responses (1-hour), CloudWatch logs for security audits.",
+    "pitfalls": [
+      "API Gateway throttling vs Lambda scaling - Gateway throttles at 10k-40k RPS (account limit), Lambda autoscales. Understand both",
+      "Authorization failures not logged - Lambda authorizers silently return 401, hard to debug. Add CloudWatch logs",
+      "Request/response mapping templates complex - use PassThrough when possible, only map when necessary",
+      "CORS misconfiguration - most common mistake. Must configure explicit origins, methods, headers with preflight handling",
+      "Deployment delays - stack refresh on config changes, takes 5-10min. Cache API responses to mask deployment time"
+    ],
+    "relatedServices": [
+      "cognito",
+      "waf",
+      "secrets",
+      "x-ray"
+    ],
+    "resources": [
+      {
+        "type": "docs",
+        "title": "API Gateway Best Practices",
+        "url": "https://docs.aws.amazon.com/apigateway/latest/developerguide/welcome.html"
+      },
+      {
+        "type": "docs",
+        "title": "Authorization Patterns",
+        "url": "https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-use-lambda-authorizer.html"
+      },
+      {
+        "type": "whitepaper",
+        "title": "REST API Security",
+        "url": "https://aws.amazon.com/blogs/architecture/"
+      },
+      {
+        "type": "example",
+        "title": "Cognito + API Gateway Setup",
+        "url": "https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-integrate-with-cognito.html"
+      }
+    ],
+    "keyPoints": [
+      "Request/response limits: 6MB max",
+      "Throttling: 10k requests/sec default",
+      "CORS: always an issue, enable carefully",
+      "Lambda authorizer caching: 5-3600s",
+      "Canary deployments: route % traffic to new version"
+    ]
+  },
+  {
+    "id": 11,
+    "day": 11,
+    "path": "Compute",
+    "title": "Container Orchestration: ECS",
+    "prerequisites": [
+      3,
+      5,
+      9
+    ],
+    "estimatedTime": 90,
+    "content": "Elastic Container Service for deploying, managing, and scaling Docker containers. Master task definitions, Fargate (serverless containers), and EC2 launch types. Learn service load balancing and auto-scaling.",
+    "useCase": "Multi-environment microservices: dev cluster on EC2 (cost-optimized), prod on Fargate (managed). Service discovery with CloudMap. Blue-green deployments with ALB target groups.",
+    "pitfalls": [
+      "Fargate vs EC2: Fargate has higher per-CPU cost but no instance management",
+      "Task network mode: awsvpc required for service-to-service communication",
+      "Task IAM roles vs container credentials: use ecsTaskExecutionRole for ECR pull, task role for app permissions",
+      "No persistent storage: ECS tasks are ephemeral, use EFS for shared storage",
+      "Health check misconfiguration: unhealthy tasks keep respawning"
+    ],
+    "relatedServices": [
+      "ecr",
+      "alb",
+      "cloudmap",
+      "efs"
+    ],
+    "resources": [
+      {
+        "type": "docs",
+        "title": "ECS Best Practices",
+        "url": "https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-best-practices.html"
+      },
+      {
+        "type": "docs",
+        "title": "Fargate Launch Type",
+        "url": "https://docs.aws.amazon.com/AmazonECS/latest/developerguide/launch_types.html"
+      },
+      {
+        "type": "whitepaper",
+        "title": "Container Architecture Patterns",
+        "url": "https://aws.amazon.com/containers/"
+      },
+      {
+        "type": "example",
+        "title": "Blue-Green Deployments",
+        "url": "https://docs.aws.amazon.com/AmazonECS/latest/developerguide/update-service.html"
+      }
+    ],
+    "keyPoints": [
+      "Fargate: no EC2 to manage, pay per vCPU-hour",
+      "Task definition: versioning and family structure",
+      "Service auto-scaling based on CloudWatch metrics",
+      "Service discovery: DNS within VPC"
+    ]
+  },
+  {
+    "id": 12,
+    "day": 12,
+    "path": "Compute",
+    "title": "Kubernetes on AWS: EKS",
+    "prerequisites": [
+      5,
+      9,
+      11
+    ],
+    "estimatedTime": 90,
+    "content": "Elastic Kubernetes Service: managed Kubernetes clusters. Master node groups, add-ons, networking policies, and workload identity. Learn Helm, horizontal pod autoscaling, and multi-region clusters.",
+    "useCase": "Global SaaS platform requiring multi-region failover with same Kubernetes API. Use EKS Anywhere for on-prem consistency. Karpenter for cost-optimized node provisioning.",
+    "pitfalls": [
+      "AWS IAM does not integrate natively with RBAC: use IAM Roles for Service Accounts (IRSA)",
+      "Network policies not enabled by default: requires Calico CNI plugin",
+      "Cluster autoscaler vs Karpenter: Karpenter consolidates underutilized nodes, better cost",
+      "Ingress controller costs: ALB costs $0.0025/hour, can exceed data transfer fees",
+      "Persistent storage challenges: EBS volumes single-AZ, prefer EFS for multi-AZ."
+    ],
+    "relatedServices": [
+      "ecr",
+      "alb",
+      "efs",
+      "iam"
+    ],
+    "resources": [
+      {
+        "type": "docs",
+        "title": "EKS Best Practices",
+        "url": "https://aws.github.io/aws-eks-best-practices/"
+      },
+      {
+        "type": "docs",
+        "title": "Kubernetes on AWS Guide",
+        "url": "https://docs.aws.amazon.com/eks/latest/userguide/getting-started.html"
+      },
+      {
+        "type": "whitepaper",
+        "title": "Container Security on EKS",
+        "url": "https://aws.amazon.com/containers/security/"
+      },
+      {
+        "type": "example",
+        "title": "Karpenter Setup",
+        "url": "https://karpenter.sh/docs/getting-started/getting-started-with-karpenter/"
+      }
+    ],
+    "keyPoints": [
+      "EKS cluster master: AWS-managed, etcd backed by DynamoDB",
+      "Node groups: launch templates control instance type",
+      "Fargate for serverless Kubernetes workloads",
+      "IRSA: Kubernetes ServiceAccount bound to IAM role"
+    ]
+  },
+  {
+    "id": 13,
+    "day": 13,
+    "path": "Messaging",
+    "prerequisites": [
+      1,
+      9
+    ],
+    "estimatedTime": 75,
+    "content": "Fully managed message queue service for decoupling and asynchronous processing. Learn standard vs FIFO queues, visibility timeout, dead-letter queues, and message batching for cost optimization.",
+    "useCase": "Order processing pipeline: Lambda receives HTTP request, pushes to SQS, returns 202 Accepted immediately. Worker Lambda processes batches (batch size=10, timeout=30s) to update RDS/DynamoDB. SQS handles retries and tracks failed orders via DLQ.",
+    "pitfalls": [
+      "Visibility timeout too short: message reprocessed before consumer finishes, duplicate work",
+      "No monitoring of DLQ: failed messages silently disappear if DLQ not checked",
+      "Standard queue ordering: no guarantees, use FIFO (20% throughput hit)",
+      "Message size >256KB: use S3 with SQS payload pointer pattern",
+      "Lambda concurrency exhaustion: SQS scales faster than Lambda can accept messages, throttled responses"
+    ],
+    "relatedServices": [
+      "lambda",
+      "s3",
+      "sns",
+      "cloudwatch"
+    ],
+    "resources": [
+      {
+        "type": "docs",
+        "title": "SQS Best Practices",
+        "url": "https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/"
+      },
+      {
+        "type": "docs",
+        "title": "Dead-Letter Queues",
+        "url": "https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.html"
+      },
+      {
+        "type": "whitepaper",
+        "title": "Async Processing Patterns",
+        "url": "https://aws.amazon.com/builders/select/sqs/"
+      },
+      {
+        "type": "example",
+        "title": "Lambda + SQS Integration",
+        "url": "https://docs.aws.amazon.com/lambda/latest/dg/with-sqs.html"
+      }
+    ],
+    "keyPoints": [
+      "Standard queue: unlimited throughput, no guarantee ordering",
+      "FIFO queue: exactly-once processing, 300 TPS standard, 3000 TPS with batching",
+      "Visibility timeout: 0-43200 seconds (default 30)",
+      "Long polling: reduces API calls and costs by 80%",
+      "Message retention: 60 seconds to 14 days"
+    ]
+  },
+  {
+    "id": 14,
+    "day": 14,
+    "path": "Messaging",
+    "title": "SNS: Simple Notification Service",
+    "prerequisites": [
+      1,
+      9
+    ],
+    "estimatedTime": 75,
+    "content": "Publish-subscribe messaging service for loose coupling and multi-recipient notifications. Master topics, subscriptions, filtering, and message deduplication for fan-out architectures.",
+    "useCase": "Payment event system: SNS topic receives payment.success event, subscriptions fan out to: SQS for inventory deduction, Lambda for email, DynamoDB for audit log, Kinesis for analytics. One publish, many subscribers.",
+    "pitfalls": [
+      "SNS throttling: soft limits of 30k messages/sec, bursts handled but sustained load fails",
+      "Message filtering policies complex: wrong condition logic creates hard-to-debug issues",
+      "Subscription loss during topic update: delete topic = all subscriptions gone",
+      "Cost surprise: SDK calls to sns:Publish add up, 1M calls = $0.50",
+      "HTTP/S subscriptions: need to implement exponential backoff and HTTP 200 response"
+    ],
+    "relatedServices": [
+      "sqs",
+      "lambda",
+      "email",
+      "sms"
+    ],
+    "resources": [
+      {
+        "type": "docs",
+        "title": "SNS Best Practices",
+        "url": "https://docs.aws.amazon.com/sns/latest/dg/sns-best-practices.html"
+      },
+      {
+        "type": "docs",
+        "title": "Message Filtering Policies",
+        "url": "https://docs.aws.amazon.com/sns/latest/dg/sns-message-filtering.html"
+      },
+      {
+        "type": "whitepaper",
+        "title": "Event-Driven Architectures",
+        "url": "https://aws.amazon.com/blogs/compute/the-right-tool-for-the-right-job-event-driven-architectures/"
+      },
+      {
+        "type": "example",
+        "title": "SNS + SQS Fan-Out",
+        "url": "https://docs.aws.amazon.com/sns/latest/dg/sns-sqs-as-subscriber.html"
+      }
+    ],
+    "keyPoints": [
+      "Pub/sub: decouple producers from consumers",
+      "Message attributes for content-based filtering",
+      "FIFO topics (paired with FIFO SQS): preserve order",
+      "Dead-letter queue support for subscriptions",
+      "$0.50 per million API requests"
+    ]
+  },
+  {
+    "id": 15,
+    "day": 15,
+    "path": "Messaging",
+    "title": "EventBridge Event Routing",
+    "prerequisites": [
+      9,
+      13,
+      14
+    ],
+    "estimatedTime": 75,
+    "content": "Event-driven architecture service that routes events from AWS services, applications, and SaaS partners to targets. Master event patterns, rule evaluation, and multi-target orchestration.",
+    "useCase": "Multi-service order system: EC2 API publishes order.created event to EventBridge custom bus. Rules route based on size: orders >$10k to Approval Lambda, normal orders to fulfillment SQS, all orders to analytics Kinesis. Integrates with Salesforce for CRM sync.",
+    "pitfalls": [
+      "Rule evaluation overhead: complex patterns slow matching, especially with many rules",
+      "Event replay limitations: EventBridge does not buffer/replay on service restart, use SQS+Lambda",
+      "Dead-letter queue not enabled: failed target invocations silently disappear",
+      "SaaS partner event formats unreliable: need schema validation, not just assume format",
+      "Cost scaling: AWS services publish 1M+ events, processing costs unexpected"
+    ],
+    "relatedServices": [
+      "sqs",
+      "sns",
+      "lambda",
+      "kinesis"
+    ],
+    "resources": [
+      {
+        "type": "docs",
+        "title": "EventBridge Best Practices",
+        "url": "https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-best-practices.html"
+      },
+      {
+        "type": "docs",
+        "title": "Event Transformation",
+        "url": "https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-transform-target-input.html"
+      },
+      {
+        "type": "whitepaper",
+        "title": "Event-Driven Serverless Patterns",
+        "url": "https://aws.amazon.com/blogs/compute/integrating-aws-services-with-eventbridge/"
+      },
+      {
+        "type": "example",
+        "title": "Multi-Target Event Routing",
+        "url": "https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-create-event-bus.html"
+      }
+    ],
+    "keyPoints": [
+      "Event patterns: filter by source, detail-type, detail attributes",
+      "Targets: Lambda, SQS, SNS, Kinesis, Step Functions, EventBridge",
+      "Schema Registry: auto-generate code from event schemas",
+      "Rule evaluation: 100 rules per 1 sec baseline",
+      "Transform: modify event before sending to target"
+    ]
+  },
+  {
+    "id": 16,
+    "day": 16,
+    "path": "Monitoring",
+    "title": "CloudWatch Observability",
+    "prerequisites": [
+      3,
+      5
+    ],
+    "estimatedTime": 90,
+    "content": "AWS native observability: metrics, logs, alarms, dashboards. Master custom metrics, log insights queries, metric math, and anomaly detection for proactive monitoring.",
+    "useCase": "Microservices dashboard: CPU, memory, error rate per service. Log Insights searches transaction latency p99 across 1TB logs in seconds. Anomaly detector catches latency spikes before customers complain.",
+    "pitfalls": [
+      "Metric resolution: 1-minute default costs 2x vs 5-minute, impacts storage",
+      "Log retention: default 0 (never expire), massive cost. Set auto-expiry policy",
+      "Alarm oscillation: threshold = mean ± 10%, noisy metrics cause flapping, smooth with statistics",
+      "Metric cardinality explosion: unique(api_endpoint) × unique(http_method) = 1000s of dimensions",
+      "Logs unstructured: JSON structured logging required for efficient Insights queries"
+    ],
+    "relatedServices": [
+      "lambda",
+      "rds",
+      "dynamodb",
+      "autoscaling"
+    ],
+    "resources": [
+      {
+        "type": "docs",
+        "title": "CloudWatch User Guide",
+        "url": "https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/WhatIsCloudWatch.html"
+      },
+      {
+        "type": "docs",
+        "title": "Logs Insights Query Syntax",
+        "url": "https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/CWL_QuerySyntax.html"
+      },
+      {
+        "type": "whitepaper",
+        "title": "Observability Best Practices",
+        "url": "https://aws.amazon.com/blogs/mt/observability-best-practices/"
+      },
+      {
+        "type": "video",
+        "title": "Advanced CloudWatch Monitoring",
+        "url": "https://aws.amazon.com/blogs/mt/"
+      }
+    ],
+    "keyPoints": [
+      "Metrics: 15 months retention at 1-minute resolution",
+      "Logs: queryable with CloudWatch Insights",
+      "Alarms: 3 states (OK, ALARM, INSUFFICIENT_DATA)",
+      "Dashboards: prefix naming (MyService_) for organization",
+      "Anomaly detection: ML-based threshold adjustment"
+    ]
+  },
+  {
+    "id": 17,
+    "day": 17,
+    "path": "Security",
+    "title": "CloudTrail Auditing",
+    "prerequisites": [
+      2,
+      16
+    ],
+    "estimatedTime": 60,
+    "content": "Track all API calls for compliance, security, and troubleshooting. Master event history, organization trails, data events, and integration with security tools for real-time alerting.",
+    "useCase": "Compliance audit: track who deleted RDS database, when, from what IP. CloudTrail + CloudWatch Logs + Lambda = automated notification to security team within 1 second of DeleteDBInstance.",
+    "pitfalls": [
+      "Multi-AZ trail costs: enable in primary region, capture all regions (data transfer fees)",
+      "Data events not enabled: S3 GetObject, Lambda Invoke auditing requires separate enablement",
+      "Event history limited: 90 days free, must export to S3 for long-term retention",
+      "S3 bucket logging unverified: logs can be modified, enable S3 object lock for immutability",
+      "Too verbose: CloudTrail logs 1000s/min, query overhead high without proper filtering"
+    ],
+    "relatedServices": [
+      "cloudwatch",
+      "s3",
+      "config",
+      "securityhub"
+    ],
+    "resources": [
+      {
+        "type": "docs",
+        "title": "CloudTrail Best Practices",
+        "url": "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/best-practices-security.html"
+      },
+      {
+        "type": "docs",
+        "title": "Organization Trails",
+        "url": "https://docs.aws.amazon.com/awscloudtrail/latest/userguide/creating-an-organizational-trail.html"
+      },
+      {
+        "type": "whitepaper",
+        "title": "Compliance and Auditing",
+        "url": "https://aws.amazon.com/blogs/security_identity_compliance/"
+      },
+      {
+        "type": "example",
+        "title": "Real-Time Alerts on Sensitive API Calls",
+        "url": "https://aws.amazon.com/blogs/security/how-to-detect-and-investigate-api-activity/"
+      }
+    ],
+    "keyPoints": [
+      "3 event types: API calls, non-API events, insights (unusual activity)",
+      "Organization trail: capture all member accounts centrally",
+      "Data events: S3, Lambda, DynamoDB (higher cost)",
+      "Digest files: verify CloudTrail log integrity",
+      "Query logs directly with CloudWatch Logs Insights"
+    ]
+  },
+  {
+    "id": 18,
+    "day": 18,
+    "path": "Security",
+    "title": "IAM Deep Dive",
+    "prerequisites": [
+      2,
+      17
+    ],
+    "estimatedTime": 90,
+    "content": "Advanced IAM: policy evaluation logic, permission boundaries, session tags, service-linked roles. Master cross-account delegation, federated access, and path-based permissions.",
+    "useCase": "SaaS multi-tenant: each customer assumes role in customer-owned account, limited by permission boundary (no access to other customers), session tags identify tenant ID for resource-based policies.",
+    "pitfalls": [
+      "Policy evaluation complexity: explicit deny > user policy > group policy > resource-based policy",
+      "Permission boundaries not a security group: customer-specific policies still override",
+      "Federated users not in IAM: SAML/OpenID tokens = temporary credentials, no persistent user",
+      "AssumeRole trust policy syntax: condition keys matter (SourceAccount for cross-account)",
+      "Credentials lingering: if user deletes own access key, audit trail shows deletion but key still works for 15min"
+    ],
+    "relatedServices": [
+      "sts",
+      "cognito",
+      "directory"
+    ],
+    "resources": [
+      {
+        "type": "docs",
+        "title": "IAM Policy Evaluation Logic",
+        "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_policy-summary-evaluation-logic.html"
+      },
+      {
+        "type": "docs",
+        "title": "Permission Boundaries",
+        "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_boundaries.html"
+      },
+      {
+        "type": "whitepaper",
+        "title": "Cross-Account Security",
+        "url": "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_common-scenarios_aws-accounts.html"
+      },
+      {
+        "type": "tool",
+        "title": "Access Analyzer",
+        "url": "https://aws.amazon.com/iam/access-analyzer/"
+      }
+    ],
+    "keyPoints": [
+      "Policy syntax: Version, Statement[], Effect, Action, Resource, Condition",
+      "Principal: account, role, user, service, or assumed role",
+      "Condition operators: StringEquals, IpAddress, DateGreaterThan, etc.",
+      "SessionTags: custom tags passed during AssumeRole for attribute-based access control",
+      "Principal string: \"arn:aws:iam::123456789012:root\" means AWS account, not just root user"
+    ]
+  },
+  {
+    "id": 19,
+    "day": 19,
+    "path": "Security",
+    "title": "Secrets Manager & KMS",
+    "prerequisites": [
+      2,
+      18
+    ],
+    "estimatedTime": 75,
+    "content": "Manage secrets (database passwords, API keys, OAuth tokens) and encryption keys. Master automatic rotation, cross-account access, and encryption at rest/in-transit patterns.",
+    "useCase": "Secrets rotation: RDS password rotated every 30 days using Lambda function with administrative credentials, applications retrieve secret from Secrets Manager (no password in code). KMS encrypts secret at rest with customer-managed key.",
+    "pitfalls": [
+      "Automatic rotation misconfiguration: Lambda function must close database connection after rotation, or connections lock out",
+      "KMS key deletion: 30-day grace period before actual deletion, but encrypted data is immediately inaccessible",
+      "Cross-account key access: must allow both in KMS key policy and Secrets Manager resource policy",
+      "Rotation cooldown: cannot rotate secret immediately after rotation, 30-day cooldown enforced",
+      "Secrets not encrypted at rest by default: must specify KMS key during creation"
+    ],
+    "relatedServices": [
+      "rds",
+      "lambda",
+      "parameter-store",
+      "cloudtrail"
+    ],
+    "resources": [
+      {
+        "type": "docs",
+        "title": "Secrets Manager Best Practices",
+        "url": "https://docs.aws.amazon.com/secretsmanager/latest/userguide/best-practices.html"
+      },
+      {
+        "type": "docs",
+        "title": "Automatic Rotation",
+        "url": "https://docs.aws.amazon.com/secretsmanager/latest/userguide/rotate-secrets_how-it-works.html"
+      },
+      {
+        "type": "whitepaper",
+        "title": "Encryption and Key Management",
+        "url": "https://aws.amazon.com/kms/features/"
+      },
+      {
+        "type": "example",
+        "title": "RDS Password Rotation",
+        "url": "https://docs.aws.amazon.com/secretsmanager/latest/userguide/auth-and-mfa_service-linked-roles.html"
+      }
+    ],
+    "keyPoints": [
+      "Secrets Manager: $0.40/secret/month + API calls",
+      "KMS: $1/key/month + encryption API charges",
+      "CMK (customer-managed key) vs AWS-managed key",
+      "Envelope encryption: KMS encrypts data key, data key encrypts secret",
+      "Audit trail: CloudTrail logs all secret access"
+    ]
+  },
+  {
+    "id": 20,
+    "day": 20,
+    "path": "Networking",
+    "title": "VPC Security Architecture",
+    "prerequisites": [
+      5,
+      19
+    ],
+    "estimatedTime": 75,
+    "content": "Network security: VPC endpoints, network ACLs, VPC Flow Logs, WAF and Shield. Learn inspection strategies, segmentation, and zero-trust network architecture.",
+    "useCase": "Secure multi-tiered app: EC2 instances never traverse public internet via VPN/TGW peering, RDS in isolated subnet (no public IP), S3 via Endpoint (VPC endpoint, not IGW). Flow Logs log denies to CloudWatch for forensics.",
+    "pitfalls": [
+      "VPC Endpoint Gateway vs Interface: Gateway (S3/DynamoDB) free, Interface (others) costs $7/month + per-request",
+      "Flow Logs disabled: 99% of issues are network-related, must enable for troubleshooting",
+      "Network ACL rules order matters: first match wins, stateless (must allow return traffic)",
+      "No proxy in path: direct EC2-to-RDS connections miss inspection, use PrivateLink proxy",
+      "WAF not on ALB: requests bypass WAF if connecting to EC2 directly, WAF only on ALB/CloudFront/APIGW"
+    ],
+    "relatedServices": [
+      "alb",
+      "waf",
+      "shield",
+      "systemsmanager"
+    ],
+    "resources": [
+      {
+        "type": "docs",
+        "title": "VPC Endpoints Best Practices",
+        "url": "https://docs.aws.amazon.com/vpc/latest/privatelink/vpc-endpoints.html"
+      },
+      {
+        "type": "docs",
+        "title": "Flow Logs Troubleshooting",
+        "url": "https://docs.aws.amazon.com/vpc/latest/userguide/flow-logs.html"
+      },
+      {
+        "type": "whitepaper",
+        "title": "VPC Security Design",
+        "url": "https://aws.amazon.com/blogs/security/vpc-security-practices/"
+      },
+      {
+        "type": "example",
+        "title": "Internet Gateway vs NAT Gateway",
+        "url": "https://docs.aws.amazon.com/vpc/latest/userguide/vpc-gateway-endpoints.html"
+      }
+    ],
+    "keyPoints": [
+      "NACL: stateless rules, apply to subnet",
+      "Security Group: stateful rules, apply to instance",
+      "VPC Flow Logs: 10-100MB/min for moderate traffic",
+      "WAF: block by IP, geolocation, rate, SQL injection patterns",
+      "TLS re-encryption in transit: decryption overhead vs compliance requirements"
+    ]
+  },
+  {
+    "id": 21,
+    "day": 21,
+    "path": "Storage",
+    "title": "EFS & Storage Optimization",
+    "prerequisites": [
+      4,
+      5
+    ],
+    "estimatedTime": 75,
+    "content": "Elastic File System for scalable, shared storage across EC2 instances and containers. Master performance modes, throughput modes, lifecycle management, and cost optimization for petabyte-scale file systems.",
+    "useCase": "Multi-AZ data lake: EFS with Provisioned Throughput for consistent 500MB/s performance. Lifecycle management moves infrequent access to EFS IA (50% cost savings). CloudWatch metrics monitor throughput and latency.",
+    "pitfalls": [
+      "Bursting throughput unpredictable: if you need consistent performance, use Provisioned Throughput mode",
+      "No automatic encryption by default: must enable at creation time, cannot add retroactively",
+      "Data sync tools like EFS DataSync forgotten: manual copy via rsync kills performance",
+      "IAM vs POSIX permissions: EFS uses POSIX, not IAM. Need both for shared access.",
+      "Performance class selection: General Purpose (default), Max IO for highly parallelized workloads"
+    ],
+    "relatedServices": [
+      "ec2",
+      "lambda",
+      "datasync",
+      "efs-infrequent-access"
+    ],
+    "resources": [
+      {
+        "type": "docs",
+        "title": "EFS Performance Optimization",
+        "url": "https://docs.aws.amazon.com/efs/latest/ug/performance.html"
+      },
+      {
+        "type": "docs",
+        "title": "EFS Lifecycle Management",
+        "url": "https://docs.aws.amazon.com/efs/latest/ug/lifecycle-management.html"
+      },
+      {
+        "type": "whitepaper",
+        "title": "File Storage Architecture Patterns",
+        "url": "https://aws.amazon.com/blogs/storage/"
+      },
+      {
+        "type": "video",
+        "title": "EFS vs EBS vs S3",
+        "url": "https://aws.amazon.com/blogs/storage/"
+      }
+    ],
+    "keyPoints": [
+      "EFS: NFS-based, shared, elastic; $0.30/GB-month",
+      "EFS IA: infrequent access tier, $0.025/GB-month + access charges",
+      "Throughput modes: Bursting (default), Provisioned (cost extra)",
+      "Max file size: 47.9 exabytes per file system",
+      "POSIX permissions: chmod, chown, ACLs supported"
+    ]
+  },
+  {
+    "id": 22,
+    "day": 22,
+    "path": "Networking",
+    "title": "Global Accelerator & Route 53",
+    "prerequisites": [
+      5,
+      10
+    ],
+    "estimatedTime": 75,
+    "content": "AWS Global Accelerator for optimized global traffic routing, and Route 53 for DNS, health checks, and traffic policies. Master geolocation routing, latency-based failover, and private hosted zones.",
+    "useCase": "Global SaaS: Global Accelerator routes users to nearest regional endpoint via Anycast IPs (immutable, avoid DNS caching issues). Route 53 health checks every 10s (fast interval), failing endpoints removed within 10s. Private hosted zone for internal service discovery.",
+    "pitfalls": [
+      "Global Accelerator vs CloudFront: GA for non-HTTP protocols (gaming, IoT), CloudFront for web content",
+      "Route 53 TTL too long: 300+ seconds causes stale=DNS. Use short TTL (30-60s) for dynamic services.",
+      "Health check false positives: if checks too frequent (30s), CloudWatch alarms trigger on transient failures",
+      "Private hosted zone not associated with VPC: resources can't resolve names, check VPC associations",
+      "Weighted routing without health checks: failed endpoints still get traffic until weight manually changed"
+    ],
+    "relatedServices": [
+      "cloudfront",
+      "alb",
+      "nlb",
+      "lambda"
+    ],
+    "resources": [
+      {
+        "type": "docs",
+        "title": "Global Accelerator Guide",
+        "url": "https://docs.aws.amazon.com/global-accelerator/latest/dg/"
+      },
+      {
+        "type": "docs",
+        "title": "Route 53 Routing Policies",
+        "url": "https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-policy.html"
+      },
+      {
+        "type": "whitepaper",
+        "title": "Multi-Region Architecture",
+        "url": "https://aws.amazon.com/blogs/networking-and-content-delivery/"
+      },
+      {
+        "type": "example",
+        "title": "Failover with Route 53",
+        "url": "https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-policy-failover.html"
+      }
+    ],
+    "keyPoints": [
+      "Global Accelerator: 2 static anycast IPs, <1ms latency improvement",
+      "Route 53: managed DNS, $0.40/hosted zone/month",
+      "Health checks: every 30 seconds (fast) or 30 seconds (standard), costs vary",
+      "Policy types: simple, weighted, latency, geolocation, failover, multivalue, geoproximity",
+      "Private hosted zones: internal DNS for EC2, RDS, Lambda"
+    ]
+  },
+  {
+    "id": 23,
+    "day": 23,
+    "path": "Databases",
+    "title": "Aurora Advanced Features",
+    "prerequisites": [
+      6,
+      7
+    ],
+    "estimatedTime": 90,
+    "content": "Aurora Global Database for multi-region replication, Aurora Serverless for auto-scaling, and Aurora ML for ML predictions in databases. Master read replicas, custom endpoints, and performance insights.",
+    "useCase": "Global SAAS db: Aurora Global Database (secondary read-only regions, <1s replication lag). Aurora Serverless auto-scales from 0.5 to 128 ACUs based on connections. Built-in ML predicts anomalies.",
+    "pitfalls": [
+      "Aurora Serverless cold start: scales from 0 takes 30-60s, not suitable for sub-second latency SLOs",
+      "Global Database secondary: read-only, cannot write. Cross-region read replicas must use DMS for bidirectional.",
+      "Custom endpoint filters by instance tags, but cannot control which instances serve requests",
+      "Backtrack window: up to 72 hours, must enable at creation, cannot add retroactively",
+      "Parallel query for large tables: only for MySQL, not PostgreSQL; not worth unless table > 100GB"
+    ],
+    "relatedServices": [
+      "rds",
+      "dms",
+      "lambda",
+      "sagemaker"
+    ],
+    "resources": [
+      {
+        "type": "docs",
+        "title": "Aurora Global Database",
+        "url": "https://docs.aws.amazon.com/AmazonRDS/latest/AuroraMySQLReleaseNotes/aurora-global-database.html"
+      },
+      {
+        "type": "docs",
+        "title": "Aurora Serverless",
+        "url": "https://docs.aws.amazon.com/AmazonRDS/latest/AuroraMySQLReleaseNotes/Aurora.ServerlessV2.html"
+      },
+      {
+        "type": "whitepaper",
+        "title": "Global Applications with Aurora",
+        "url": "https://aws.amazon.com/rds/aurora/"
+      },
+      {
+        "type": "video",
+        "title": "Aurora Performance Tuning",
+        "url": "https://aws.amazon.com/blogs/database/"
+      }
+    ],
+    "keyPoints": [
+      "Aurora Serverless: 0.5 ACU minimum, auto-pause after 5+ mins inactivity saves cost",
+      "Global Database: primary + up to 5 secondaries, cross-region failover < 1s",
+      "Custom endpoints: weight-based routing to specific instances",
+      "Performance Insights: diagnose bottlenecks, built-in cost",
+      "Backtrack: undo mistakes without restore, cheaper than snapshots"
+    ]
+  },
+  {
+    "id": 24,
+    "day": 24,
+    "path": "DevOps",
+    "title": "CodePipeline & CI/CD",
+    "prerequisites": [
+      9,
+      11
+    ],
+    "estimatedTime": 90,
+    "content": "Continuous integration and deployment with AWS CodePipeline. Master multi-stage deployments, CodeBuild, CodeDeploy, and artifact management for enterprise delivery at scale.",
+    "useCase": "Enterprise pipeline: source (CodeCommit) → build (CodeBuild, run tests, SAST scans) → deploy-to-staging (CodeDeploy, blue-green) → approval gate → deploy-to-prod. Rollback on health check failure (auto-rollback).",
+    "pitfalls": [
+      "CodeBuild caching: container images not cached between builds, rebuild layer takes 2+ mins",
+      "CodeDeploy blue-green: terminates green fleet before draining connections, set termination wait time",
+      "Artifacts not cleaned: each run creates artifacts, S3 storage costs explode without lifecycle policies",
+      "IAM cross-account pipeline: requires assume-role in target account + source account principal in trust policy",
+      "Manual approval gate timeout: default 7 days, if longer, pipeline times out and needs restart"
+    ],
+    "relatedServices": [
+      "codecommit",
+      "codebuild",
+      "codedeploy",
+      "cloudformation"
+    ],
+    "resources": [
+      {
+        "type": "docs",
+        "title": "CodePipeline Best Practices",
+        "url": "https://docs.aws.amazon.com/codepipeline/latest/userguide/best-practices.html"
+      },
+      {
+        "type": "docs",
+        "title": "CodeBuild Docker Images",
+        "url": "https://docs.aws.amazon.com/codebuild/latest/userguide/sample-docker.html"
+      },
+      {
+        "type": "whitepaper",
+        "title": "CI/CD Patterns on AWS",
+        "url": "https://aws.amazon.com/blogs/devops/"
+      },
+      {
+        "type": "example",
+        "title": "Multi-Stage Deployment",
+        "url": "https://docs.aws.amazon.com/codepipeline/latest/userguide/concepts.html"
+      }
+    ],
+    "keyPoints": [
+      "CodePipeline stages: source → build → deploy, add approval gates",
+      "CodeBuild: managed build service, pay per minute, auto-scale",
+      "CodeDeploy: deploy to EC2/on-prem/Lambda, all-at-once/rolling/canary/blue-green",
+      "Artifacts: pass between stages via S3, separate bucket per environment recommended",
+      "Failure handling: manual/automatic rollback, health checks determine success"
+    ]
+  },
+  {
+    "id": 25,
+    "day": 25,
+    "path": "Monitoring",
+    "title": "X-Ray Distributed Tracing",
+    "prerequisites": [
+      9,
+      16
+    ],
+    "estimatedTime": 75,
+    "content": "AWS X-Ray for distributed tracing across microservices. Master trace maps, service graphs, error analysis, and performance insights for complex applications.",
+    "useCase": "Microservices troubleshooting: request enters API Gateway → Lambda → RDS. X-Ray maps shows bottleneck is RDS (4s out of 5s total). Annotate traces with custom metadata for business context.",
+    "pitfalls": [
+      "X-Ray sampling: default samples 1/sec + 5% of traffic, can miss rare errors. Set sampling rate high during debug.",
+      "SDK integration required: Lambda auto-integrates, EC2 needs daemon + SDK code changes",
+      "Annotations vs metadata: annotations are queryable/filterable (use for business IDs), metadata is not",
+      "Trace data retention: 30 days default, can export to S3 for long-term compliance audits",
+      "Sampling rules complex: priority-based routing can unexpectedly oversample low-traffic routes"
+    ],
+    "relatedServices": [
+      "lambda",
+      "apigateway",
+      "rds",
+      "cloudwatch"
+    ],
+    "resources": [
+      {
+        "type": "docs",
+        "title": "X-Ray Getting Started",
+        "url": "https://docs.aws.amazon.com/xray/latest/devguide/xray-gettingstarted.html"
+      },
+      {
+        "type": "docs",
+        "title": "Sampling Rules",
+        "url": "https://docs.aws.amazon.com/xray/latest/devguide/xray-console-sampling.html"
+      },
+      {
+        "type": "whitepaper",
+        "title": "Observability in Microservices",
+        "url": "https://aws.amazon.com/blogs/mt/"
+      },
+      {
+        "type": "example",
+        "title": "Instrumenting Lambda",
+        "url": "https://docs.aws.amazon.com/xray/latest/devguide/xray-sdk-python.html"
+      }
+    ],
+    "keyPoints": [
+      "Trace ID: propagated across services via X-Amzn-Trace-Id header",
+      "Service map: visualizes dependencies, latencies, error rates",
+      "Annotations: custom key-value pairs, queryable in X-Ray console",
+      "Sampling: trade-off cost vs insight. Start with conservative, increase on issues.",
+      "Cost: $5/M records ingested, $0.50/M records scanned"
+    ]
+  },
+  {
+    "id": 26,
+    "day": 26,
+    "path": "Data",
+    "title": "Glue Data Catalog & ETL",
+    "prerequisites": [
+      4,
+      7
+    ],
+    "estimatedTime": 90,
+    "content": "AWS Glue for serverless ETL, data catalog, and schema inference. Master job scheduling, data quality checks, and integration with data lakes for analytics at scale.",
+    "useCase": "Data lake ETL: Glue Crawler scans S3 JSON files, auto-creates Athena schema. Glue Job transforms RDS → S3 Parquet nightly (auto-scales based on DPU hours). Data Quality Rules check row count, null rates.",
+    "pitfalls": [
+      "DPU hours cost explodes: 1 job with 100 DPUs for 1 hour = $1.63. Tune parallelism, not just throw compute.",
+      "Crawler schema drift: updates table definition on each run, can break downstream queries if column types change",
+      "Duplicate job triggers: if Glue job triggered by EventBridge + scheduled, can trigger twice on same data",
+      "Partition projection not used: manual partition management slow for >1000 partitions, use projection.",
+      "Job bookmark state: if reprocessing, must disable/reset bookmark, else skips already-processed data"
+    ],
+    "relatedServices": [
+      "athena",
+      "redshift",
+      "s3",
+      "lambda"
+    ],
+    "resources": [
+      {
+        "type": "docs",
+        "title": "Glue Data Catalog",
+        "url": "https://docs.aws.amazon.com/glue/latest/dg/catalog-and-crawler.html"
+      },
+      {
+        "type": "docs",
+        "title": "Glue ETL Jobs",
+        "url": "https://docs.aws.amazon.com/glue/latest/dg/add-job.html"
+      },
+      {
+        "type": "whitepaper",
+        "title": "Data Lake Architecture",
+        "url": "https://aws.amazon.com/blogs/big-data/"
+      },
+      {
+        "type": "example",
+        "title": "Data Quality Framework",
+        "url": "https://docs.aws.amazon.com/glue/latest/dg/data-quality.html"
+      }
+    ],
+    "keyPoints": [
+      "Crawler: auto-discovers schema, creates/updates tables, 1 job = $0.44/DPU-hour",
+      "Partition proection: infers partition keys from S3 path, avoids table metadata explosions",
+      "Job bookmarks: tracks processed data, prevents reprocessing (disable for full reload)",
+      "Data Quality Rules: anomaly detection, alerts on data issues",
+      "Glue Studio: visual ETL builder, SQL support, no code required"
+    ]
+  },
+  {
+    "id": 27,
+    "day": 27,
+    "path": "Data",
+    "title": "Athena Query Optimization",
+    "prerequisites": [
+      4,
+      26
+    ],
+    "estimatedTime": 75,
+    "content": "Presto-based SQL for S3 data analysis. Master partitioning, columnar formats, projection, and cost optimization to reduce query costs by 90%.",
+    "useCase": "Analytics on S3: query 100GB Parquet dataset in <5s by: (1) Partitioning by date, (2) Using Parquet (columnar), (3) Projection to enumerate partitions, (4) Filtering to subset partitions. Cost: $0.005/GB scanned = $0.50.",
+    "pitfalls": [
+      "CSV instead of Parquet: 10x larger, costs 10x more. Always convert to Parquet/ORC by default.",
+      "No partitioning: full table scan required, $100+ for 10TB dataset. Partition by date/region/account.",
+      "Athena workgroups not configured: runs queries serially, limited to 30 concurrent queries. Set workgroup concurrency.",
+      "ResultsReuse turned off: re-running same query costs again. Enable result caching (24h) by default.",
+      "No query insights: cannot diagnose slow queries without stats. Enable query logging to CloudWatch."
+    ],
+    "relatedServices": [
+      "s3",
+      "glue",
+      "quicksight",
+      "lambda"
+    ],
+    "resources": [
+      {
+        "type": "docs",
+        "title": "Athena Best Practices",
+        "url": "https://docs.aws.amazon.com/athena/latest/ug/querying-supported-statements.html"
+      },
+      {
+        "type": "docs",
+        "title": "Columnar Format Optimization",
+        "url": "https://docs.aws.amazon.com/athena/latest/ug/columnar-storage.html"
+      },
+      {
+        "type": "whitepaper",
+        "title": "Cost Optimization for Analytics",
+        "url": "https://aws.amazon.com/blogs/big-data/"
+      },
+      {
+        "type": "example",
+        "title": "Partition Projection",
+        "url": "https://docs.aws.amazon.com/athena/latest/ug/partition-projection.html"
+      }
+    ],
+    "keyPoints": [
+      "Parquet: 10x compression vs CSV, faster queries, cost per GB scanned reduced",
+      "Partition pruning: filter at partition level before scanning data",
+      "Projection: enumerate partitions without metadata lookups",
+      "Workgroups: control concurrency, enforce query limits, cost controls",
+      "Cost: $5 per TB scanned, Provisioned Capacity avoids per-query charges"
+    ]
+  },
+  {
+    "id": 28,
+    "day": 28,
+    "path": "AI/ML",
+    "title": "SageMaker Model Training & Deployment",
+    "prerequisites": [
+      7,
+      25
+    ],
+    "estimatedTime": 90,
+    "content": "Amazon SageMaker for fully managed machine learning. Master built-in algorithms, hyperparameter tuning, model hosting, and inference optimization for production ML pipelines.",
+    "useCase": "Churn prediction: train XGBoost on RDS customer data (Spot instances, 40% cost savings). Automatic hyperparameter tuning tests 100 configurations, selects best. Deploy to SageMaker endpoint, auto-scales based on invocations.",
+    "pitfalls": [
+      "Training data in wrong format: SageMaker expects CSV/Parquet, improper formatting doubles training time",
+      "Instance type mismatch: using general-purpose (m5) for GPU jobs is wasteful. Use p3/p4 for GPU, c5 for CPU.",
+      "No early stopping: hyperparameter tuning can run for days. Set max candidates, early stopping policy.",
+      "Inference instance overprovisioned: batch transform for offline predictions (cheaper), only endpoint for real-time.",
+      "Model monitoring disabled: model drift undetected, accuracy silently degrades. Enable Model Monitor."
+    ],
+    "relatedServices": [
+      "s3",
+      "rds",
+      "lambda",
+      "eventbridge"
+    ],
+    "resources": [
+      {
+        "type": "docs",
+        "title": "SageMaker Getting Started",
+        "url": "https://docs.aws.amazon.com/sagemaker/latest/dg/whatis.html"
+      },
+      {
+        "type": "docs",
+        "title": "Built-In Algorithms",
+        "url": "https://docs.aws.amazon.com/sagemaker/latest/dg/sagemaker-algo-docker-registry-paths.html"
+      },
+      {
+        "type": "whitepaper",
+        "title": "ML Best Practices",
+        "url": "https://aws.amazon.com/machine-learning/"
+      },
+      {
+        "type": "example",
+        "title": "Hyperparameter Tuning",
+        "url": "https://docs.aws.amazon.com/sagemaker/latest/dg/automatic-model-tuning.html"
+      }
+    ],
+    "keyPoints": [
+      "Training: pay for instance time + S3 storage, Spot instances 70% cheaper",
+      "Hosting: On-Demand or Provisioned Throughput (commitments reduce cost)",
+      "Batch Transform: offline predictions, no real-time endpoint needed",
+      "Autopilot: auto-train best model (Linear Learner, XGBoost, Neural Networks)",
+      "Model Monitor: detect drift, trigger retraining pipelines"
+    ]
+  },
+  {
+    "id": 29,
+    "day": 29,
+    "path": "AI/ML",
+    "title": "Rekognition & Textract Services",
+    "prerequisites": [
+      1,
+      28
+    ],
+    "estimatedTime": 75,
+    "content": "Pre-trained computer vision (Rekognition) and document processing (Textract) services. Master image labeling, object detection, text extraction, and custom model training without deep learning expertise.",
+    "useCase": "Document processing pipeline: Textract extracts text from receipts/invoices. Rekognition detects if signature present. Lambda orchestrates, stores structured data in DynamoDB for downstream processing.",
+    "pitfalls": [
+      "Rekognition confidence threshold too low: default 50%, returns junk labels. Raise to 80%+ for production.",
+      "Textract table extraction unreliable: complex tables fail, manually validate against source. Use forms API if structured.",
+      "Custom Rekognition models (SageMaker): requires >100 labeled images, most projects skip this overhead.",
+      "Async operations latency: Textract async job might queue 5+ minutes during peak. Budget for this in workflows.",
+      "Cost surprises: Rekognition per-image costs add up. 1M images = $500. Batch processing during off-hours if budget-conscious."
+    ],
+    "relatedServices": [
+      "textract",
+      "lambda",
+      "dynamodb",
+      "s3"
+    ],
+    "resources": [
+      {
+        "type": "docs",
+        "title": "Rekognition Image Analysis",
+        "url": "https://docs.aws.amazon.com/rekognition/latest/dg/what-is.html"
+      },
+      {
+        "type": "docs",
+        "title": "Textract Document Processing",
+        "url": "https://docs.aws.amazon.com/textract/latest/dg/what-is.html"
+      },
+      {
+        "type": "whitepaper",
+        "title": "Computer Vision at Scale",
+        "url": "https://aws.amazon.com/machine-learning/"
+      },
+      {
+        "type": "example",
+        "title": "Invoice Processing with Textract",
+        "url": "https://aws.amazon.com/blogs/machine-learning/"
+      }
+    ],
+    "keyPoints": [
+      "Rekognition: labels, objects, celebrities, text (OCR), moderation, faces",
+      "Textract: forms, tables, handwriting, async processing",
+      "JPEG/PNG formats supported. PDFs require async API (1-5 min process time)",
+      "Cost: $0.001/image (Rekognition), $1.50/page (Textract)",
+      "Batch operations: async job for bulk processing, 10x cheaper than sync API"
+    ]
+  },
+  {
+    "id": 30,
+    "day": 30,
+    "path": "Cost",
+    "title": "Cost Optimization & Savings Plans",
+    "prerequisites": [
+      1,
+      6
+    ],
+    "estimatedTime": 75,
+    "content": "AWS Cost Management: Reserved Instances, Savings Plans, Spot instances, Reserved Capacity. Master cost allocation, budgeting, and cost anomaly detection to reduce cloud spend by 40-60%.",
+    "useCase": "Cost optimization: (1) Commit to Savings Plans for baseline load (40% savings), (2) use Spot for burst workloads (-70%), (3) schedule Dev/Test instances off-hours (schedule-based, -50%), (4) right-size instances using Compute Optimizer.",
+    "pitfalls": [
+      "Savings Plans inflexible: 1-3 year commitment with limited instance class flexibility. Can switch families within category.",
+      "Unused Reserved Instances: pre-purchase without validating usage. Use On-Demand for 3+ months first, then RI.",
+      "No cost alerting: spend balloons unnoticed. Set budget alerts at 50%, 80%, 100% of monthly target.",
+      "Cross-account billing not consolidated: multi-account environments miss volume discounts. Link accounts to master payer.",
+      "Orphaned resources drain budget: unattached EBS, unused Elastic IPs, terminated RDS backups. Automate cleanup."
+    ],
+    "relatedServices": [
+      "ce",
+      "budgets",
+      "computeoptimizer",
+      "tagging"
+    ],
+    "resources": [
+      {
+        "type": "docs",
+        "title": "Cost Optimization Best Practices",
+        "url": "https://docs.aws.amazon.com/cost-management-user-guide/"
+      },
+      {
+        "type": "docs",
+        "title": "Savings Plans Guide",
+        "url": "https://docs.aws.amazon.com/savingsplans/latest/userguide/"
+      },
+      {
+        "type": "whitepaper",
+        "title": "Cost Optimization Strategies",
+        "url": "https://aws.amazon.com/architecture/cost-optimization-strategies/"
+      },
+      {
+        "type": "tool",
+        "title": "Compute Optimizer",
+        "url": "https://aws.amazon.com/compute-optimizer/"
+      }
+    ],
+    "keyPoints": [
+      "Savings Plans: compute-flexible (any region/family), 1/3-year commits, 20-66% savings",
+      "Spot instances: 70-90% discount, 2-min interruption notice",
+      "Reserved Instances: commit to specific size, less flexible, deeper discounts",
+      "Compute Optimizer: recommends 20% oversized instances, free service",
+      "Tagging strategy: cost allocation by project/team/environment"
+    ]
+  },
+  {
+    "id": 31,
+    "day": 31,
+    "path": "Compute",
+    "title": "Auto Scaling Advanced Patterns",
+    "prerequisites": [
+      3,
+      25
+    ],
+    "estimatedTime": 75,
+    "content": "Advanced Auto Scaling: target tracking, scheduled scaling, predictive scaling. Master capacity planning, cost optimization, and SLA compliance through intelligent scaling strategies.",
+    "useCase": "E-commerce during holiday peak: (1) predictive scaling learns historical demand, scales 1hr early, (2) target tracking maintains 70% CPU, (3) scheduled scaling spins up extra capacity Black Friday 6am, (4) costs drop post-holiday via scheduled scale-down.",
+    "pitfalls": [
+      "Target tracking thrashing: aggressive metrics cause oscillation (scale-up → scale-down → repeat). Increase scale-down cooldown.",
+      "Predictive scaling needs 14 days of data: new applications cannot use it initially, use target tracking instead.",
+      "Mixed instance policy complexity: combining on-demand + Spot + Reserved instances. Test failover scenarios.",
+      "Custom CloudWatch metrics lag 1-2 minutes: scaling based on custom metrics reacts slower than built-in metrics.",
+      "Termination policy overlooked: old instances removed first (default). Change if you need new instances removed instead."
+    ],
+    "relatedServices": [
+      "ec2",
+      "dynamodb",
+      "elbv2",
+      "cloudwatch"
+    ],
+    "resources": [
+      {
+        "type": "docs",
+        "title": "Auto Scaling Groups",
+        "url": "https://docs.aws.amazon.com/autoscaling/ec2/userguide/"
+      },
+      {
+        "type": "docs",
+        "title": "Predictive Scaling",
+        "url": "https://docs.aws.amazon.com/autoscaling/ec2/userguide/predictive-scaling.html"
+      },
+      {
+        "type": "whitepaper",
+        "title": "Scaling Strategies",
+        "url": "https://aws.amazon.com/blogs/compute/"
+      },
+      {
+        "type": "example",
+        "title": "Target Tracking Policy",
+        "url": "https://docs.aws.amazon.com/autoscaling/ec2/userguide/as-scaling-target-tracking.html"
+      }
+    ],
+    "keyPoints": [
+      "Target tracking: maintain metric at 70% CPU (or custom), auto-adjusts capacity",
+      "Predictive scaling: ML learns patterns, scales 1hr ahead",
+      "Scheduled scaling: predictable spikes (batch windows, traffic patterns)",
+      "Mixed instances: on-demand (stable) + Spot (burst), Capacity Rebalancing moves Spot before interruption",
+      "Health checks: ELB, EC2 status, custom scripts"
+    ]
+  },
+  {
+    "id": 32,
+    "day": 32,
+    "path": "Networking",
+    "title": "Direct Connect & Hybrid Networks",
+    "prerequisites": [
+      5,
+      20
+    ],
+    "estimatedTime": 90,
+    "content": "AWS Direct Connect for dedicated network connections, VPN alternatives, and hybrid cloud architectures. Master failover patterns, encryption, and multi-region connectivity for enterprise integrations.",
+    "useCase": "Hybrid architecture: Direct Connect tunnel (1Gbps stable bandwidth, <1ms latency) for production traffic. Backup VPN tunnel for failover. On-prem servers access AWS services with consistent networking, DynamoDB from Oracle Apps without copying data.",
+    "pitfalls": [
+      "Direct Connect 30-day activation lag: request connection far in advance, network teams need time.",
+      "BGP misconfiguration: Azure/GCP peer with AWS Direct Connect via 3rd party. Risk of route hijacking, validate peer AS.",
+      "Encryption not automatic: Direct Connect is unencrypted. Layer IPSec on top for real security.",
+      "Failover timing: switch from DC → VPN takes 30-60sec (BGP convergence). Acceptable for most, not for 99.999%.",
+      "Asymmetric routing: traffic goes out DC, returns via VPN. Firewall rules get confused. Ensure symmetric paths."
+    ],
+    "relatedServices": [
+      "vpc",
+      "vpn",
+      "transit-gateway",
+      "route53"
+    ],
+    "resources": [
+      {
+        "type": "docs",
+        "title": "Direct Connect Guide",
+        "url": "https://docs.aws.amazon.com/directconnect/latest/userguide/"
+      },
+      {
+        "type": "docs",
+        "title": "VPN with Direct Connect",
+        "url": "https://docs.aws.amazon.com/vpn/latest/s2svpn/vpn-failover.html"
+      },
+      {
+        "type": "whitepaper",
+        "title": "Hybrid Connectivity",
+        "url": "https://aws.amazon.com/hybrid/"
+      },
+      {
+        "type": "example",
+        "title": "Redundant Connections",
+        "url": "https://docs.aws.amazon.com/directconnect/latest/userguide/failover.html"
+      }
+    ],
+    "keyPoints": [
+      "Direct Connect: 1Gbps, 10Gbps, or 100Gbps, ~$0.30/hour + port charges",
+      "Virtual Interfaces: private (VPC), public (S3), transit (TGW)",
+      "BGP: announced by AWS (customer routes), must de-duplicate, lowest AS-path wins",
+      "Redundancy: 2 connections in different AWS locations",
+      "BGP timers: failover in 30-60sec after keepalive miss"
+    ]
+  },
+  {
+    "id": 33,
+    "day": 33,
+    "path": "Security",
+    "title": "AWS Config & Compliance",
+    "prerequisites": [
+      2,
+      17
+    ],
+    "estimatedTime": 75,
+    "content": "AWS Config for compliance monitoring, resource inventory, and audit trails. Master Config rules, remediation automation, and compliance dashboard for governance at scale.",
+    "useCase": "Compliance audits (SOC2, PCI): Config enables non-compliant resources (e.g., public S3 buckets, unencrypted RDS). Rules fire on change, Lambda auto-remediation applies security group rules, notifications to SecOps.",
+    "pitfalls": [
+      "Config rules too permissive: rule fires on every change, notifications spam. Add rule exclusions for dev/test.",
+      "Aggregator in wrong account: should be in centralized security account, not member accounts.",
+      "Remediation loops: auto-remediate rule fires again, causing infinite loop. Disable auto-remediate for non-idempotent rules.",
+      "Data duplication: Config duplicates CloudTrail, different retention. Config: 90 days, CloudTrail: 365+ days (S3 archive).",
+      "No cross-account view: separate Config in each account. Use Aggregator for consolidated dashboard."
+    ],
+    "relatedServices": [
+      "cloudtrail",
+      "ssm",
+      "lambda",
+      "sns"
+    ],
+    "resources": [
+      {
+        "type": "docs",
+        "title": "AWS Config Developer Guide",
+        "url": "https://docs.aws.amazon.com/config/latest/developerguide/"
+      },
+      {
+        "type": "docs",
+        "title": "Config Rules",
+        "url": "https://docs.aws.amazon.com/config/latest/developerguide/managed-rules-by-aws-config.html"
+      },
+      {
+        "type": "whitepaper",
+        "title": "Compliance & Governance",
+        "url": "https://aws.amazon.com/compliance/"
+      },
+      {
+        "type": "example",
+        "title": "Auto-Remediation",
+        "url": "https://docs.aws.amazon.com/config/latest/developerguide/remediation-controls.html"
+      }
+    ],
+    "keyPoints": [
+      "Config rules: triggered by config changes or periodic evaluation",
+      "Aggregator: centralized view across accounts & regions",
+      "Resource timeline: see config changes over time, audit trail",
+      "SSH key rotation: automated if paired with Systems Manager",
+      "Remediation: auto-fix non-compliance (idempotent actions only)"
+    ]
+  },
+  {
+    "id": 34,
+    "day": 34,
+    "path": "Databases",
+    "title": "Redis Cluster & Memcached Deep Dive",
+    "prerequisites": [
+      8,
+      23
+    ],
+    "estimatedTime": 75,
+    "content": "ElastiCache Redis/Memcached advanced patterns: cluster mode, replication, failover, and cost optimization for session stores and real-time analytics.",
+    "useCase": "Real-time gaming leaderboard: Redis Sorted Sets (O(log N) insertion). Cluster mode with 3 shards for 9GB dataset. Read replicas in different AZs. Automatic failover promotes replica on shard failure.",
+    "pitfalls": [
+      "Memcached no persistence: node failure = data loss. Use Redis for durability, Memcached only for throwaway cache.",
+      "Redis cluster mode misconfigured: all data in 1 shard if not specified. Explicit node count needed for multi-shard.",
+      "Connection pooling not implemented: exhausts connections on connection churn, reduces throughput 10x.",
+      "Eviction policy wrong: memcached deletes LRU items, Redis blocks writes if memory full. Know the difference.",
+      "Multi-AZ with read replicas: synchronous replication adds latency (p99 +50ms). Needed for standby failover only."
+    ],
+    "relatedServices": [
+      "lambda",
+      "dynamodb",
+      "ec2",
+      "rds"
+    ],
+    "resources": [
+      {
+        "type": "docs",
+        "title": "ElastiCache for Redis",
+        "url": "https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/WhatIs.html"
+      },
+      {
+        "type": "docs",
+        "title": "Cluster Mode vs Disabled",
+        "url": "https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/cluster-mode.html"
+      },
+      {
+        "type": "whitepaper",
+        "title": "Caching Strategies",
+        "url": "https://aws.amazon.com/blogs/database/"
+      },
+      {
+        "type": "example",
+        "title": "Leaderboard Implementation",
+        "url": "https://aws.amazon.com/blogs/database/amazon-elasticache/"
+      }
+    ],
+    "keyPoints": [
+      "Redis: persistence (RDB/AOF), Lua scripts, Streams",
+      "Memcached: simpler, lower latency, no persistence",
+      "Cluster mode: distribute data, avoid single-shard bottleneck",
+      "Automatic failover: if primary fails, read replica promoted in <1s",
+      "Reserved nodes: 1/3-year commitments 40-60% discounts"
+    ]
+  },
+  {
+    "id": 35,
+    "day": 35,
+    "path": "Serverless",
+    "title": "Step Functions & Workflow Orchestration",
+    "prerequisites": [
+      9,
+      13
+    ],
+    "estimatedTime": 90,
+    "content": "AWS Step Functions for complex serverless workflows. Master state machines, error handling, retries, and building resilient multi-step processes without managing queues.",
+    "useCase": "Order processing workflow: Wait 5 min → Check inventory → Reserve items → Process payment → Ship → Send confirmation. If payment fails, retry 3x with exponential backoff. Notify customers of failures.",
+    "pitfalls": [
+      "Long-running executions timeout: max 1 year, but billing per state transition. 1000 transitions = $5. Watch execution depth.",
+      "Error handling complexity: retry policies + catch blocks can hide bugs. Test failure paths extensively.",
+      "Lack of idempotency: stepped execution assumes tasks can repeat. Critical with payment processing (double charge risk).",
+      "No built-in metrics: Step Functions has no native dashboards. Use X-Ray or custom CloudWatch metrics.",
+      "State machine deployment: no easy rollback. Version state machines, switch alias to current version."
+    ],
+    "relatedServices": [
+      "lambda",
+      "sns",
+      "sqs",
+      "dynamodb"
+    ],
+    "resources": [
+      {
+        "type": "docs",
+        "title": "Step Functions User Guide",
+        "url": "https://docs.aws.amazon.com/step-functions/latest/dg/"
+      },
+      {
+        "type": "docs",
+        "title": "Error Handling in Step Functions",
+        "url": "https://docs.aws.amazon.com/step-functions/latest/dg/concepts-error-handling.html"
+      },
+      {
+        "type": "whitepaper",
+        "title": "Serverless Workflows",
+        "url": "https://aws.amazon.com/blogs/compute/serverless/"
+      },
+      {
+        "type": "example",
+        "title": "Express Workflows",
+        "url": "https://docs.aws.amazon.com/step-functions/latest/dg/concepts-sync-asym.html"
+      }
+    ],
+    "keyPoints": [
+      "Standard workflows: up to 1 year, audit trail",
+      "Express workflows: 5-minute limit, optimized for high throughput",
+      "Map state: parallel execution of iterations",
+      "Retry policy: exponential backoff, max attempts",
+      "Cost: $0.000025 per state transition (1M transitions = $25)"
+    ]
+  },
+  {
+    "id": 36,
+    "day": 36,
+    "path": "DevOps",
+    "title": "Infrastructure as Code: CloudFormation Advanced",
+    "prerequisites": [
+      24,
+      32
+    ],
+    "estimatedTime": 90,
+    "content": "CloudFormation templates, stacks, change sets, and advanced features like Custom Resources, nested stacks, and StackSets for multi-region deployments.",
+    "useCase": "Multi-region app: StackSet creates stack in us-east-1, eu-west-1, ap-southeast-1. CloudFormation templates define VPC, RDS, IAM. Change sets review before deployment (prevents mistakes).",
+    "pitfalls": [
+      "Circular dependencies: if resource A references B and B references A, CloudFormation deadlocks. Use Ref carefully.",
+      "Updating immutable resources: some properties require replacement (e.g., RDS engine version). Downtime required.",
+      "Long import times: importing 1000s of resources into stack takes hours. Batch imports.",
+      "Drift detection ignored: manual changes outside CloudFormation cause stack drift. Monthly drift audits essential.",
+      "Custom Resource timeouts: Lambda can take >15 minutes, Custom Resources timeout at 60s (4.5 min max with wait condition)."
+    ],
+    "relatedServices": [
+      "cloudformation",
+      "systems-manager",
+      "lambda",
+      "sns"
+    ],
+    "resources": [
+      {
+        "type": "docs",
+        "title": "CloudFormation User Guide",
+        "url": "https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/"
+      },
+      {
+        "type": "docs",
+        "title": "Custom Resources",
+        "url": "https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/custom-resources.html"
+      },
+      {
+        "type": "whitepaper",
+        "title": "Infrastructure as Code",
+        "url": "https://aws.amazon.com/blogs/devops/"
+      },
+      {
+        "type": "example",
+        "title": "StackSets for Multi-Account",
+        "url": "https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/stacksets-concepts.html"
+      }
+    ],
+    "keyPoints": [
+      "Templates: YAML/JSON, Parameters, Conditions, Resources, Outputs",
+      "Change sets: preview changes before applying (risk reduction)",
+      "StackSets: deploy across accounts/regions programmatically",
+      "Drift detection: compare stack definition vs actual resources",
+      "Nested stacks: organize large templates, 50-stack depth limit"
+    ]
+  },
+  {
+    "id": 37,
+    "day": 37,
+    "path": "Data",
+    "title": "Redshift Cluster & Data Warehouse",
+    "prerequisites": [
+      7,
+      26
+    ],
+    "estimatedTime": 90,
+    "content": "Amazon Redshift for petabyte-scale data warehousing. Master cluster design, columnar storage, distribution keys, and query optimization for analytics at scale.",
+    "useCase": "Data warehouse: 100GB fact table, distributed by order_id (co-locate with dimension tables). Sortkey on date for time-series queries. Spectrum queries cold data in S3. Costs $5-20/hour vs $50/hour Snowflake.",
+    "pitfalls": [
+      "Distribution key bottleneck: all facts go to 1 node if key is poor (e.g., country with 90% USA). Redistribute evenly.",
+      "Spectrum scan slower than Redshift: S3 queries take 10x longer than local disk. Only for truly cold data.",
+      "Compression not automatic: gzip/bzip2 required for raw data. Saves 80% storage, slightly slower query.",
+      "Refresh after bulk load: analyze tables after massive insert, else query planner uses wrong stats.",
+      "Concurrency scaling disabled: during peak (10+ queries), queries queue and take 1+ min. Enable concurrency scaling."
+    ],
+    "relatedServices": [
+      "s3",
+      "glue",
+      "quicksight",
+      "lambda"
+    ],
+    "resources": [
+      {
+        "type": "docs",
+        "title": "Redshift Database Guide",
+        "url": "https://docs.aws.amazon.com/redshift/latest/dg/"
+      },
+      {
+        "type": "docs",
+        "title": "Spectrum for S3 Data",
+        "url": "https://docs.aws.amazon.com/redshift/latest/dg/c-using-spectrum.html"
+      },
+      {
+        "type": "whitepaper",
+        "title": "Data Warehouse Architecture",
+        "url": "https://aws.amazon.com/redshift/resources/"
+      },
+      {
+        "type": "example",
+        "title": "Concurrency Scaling",
+        "url": "https://docs.aws.amazon.com/redshift/latest/dg/concurrency-scaling.html"
+      }
+    ],
+    "keyPoints": [
+      "RA3 nodes: managed storage, scale compute/storage independently",
+      "Distribution key: determines which node stores the row, join performance depends on key",
+      "Sort keys: physical ordering, speeds up range scans (date, timestamp)",
+      "Spectrum: query S3 data directly, metadata via Glue Catalog",
+      "Cost: $1-15/hour per node, pause for < daily use"
+    ]
+  },
+  {
+    "id": 38,
+    "day": 38,
+    "path": "AI/ML",
+    "title": "Comprehend & Natural Language Processing",
+    "prerequisites": [
+      28,
+      29
+    ],
+    "estimatedTime": 75,
+    "content": "AWS Comprehend for text analysis: sentiment analysis, entity recognition, topic modeling. Master batch processing, real-time APIs, and custom entity recognition for NLP at scale.",
+    "useCase": "Customer feedback analysis: Comprehend detects sentiment (positive/negative/neutral) in 10K reviews/day. Custom entity recognition identifies product mentions. Results feed dashboard for product team.",
+    "pitfalls": [
+      "Language detection errors: non-English text misidentified. Specify language if known to avoid 10% accuracy drop.",
+      "Entity recognition limited: predefined entities only. Need custom models for domain-specific terms (e.g., legal entities).",
+      "Batch job latency: Comprehend batch can take 5+ minutes for large jobs. For real-time, use sync API (lower throughput).",
+      "Cost in compliance scenarios: Personally Identifiable Information (PII) detection costs 2-3x more. Disable if not needed.",
+      "Multilingual models underperform: 85% vs 95% accuracy vs English-only. Test before production use."
+    ],
+    "relatedServices": [
+      "textract",
+      "translate",
+      "lambda",
+      "dynamodb"
+    ],
+    "resources": [
+      {
+        "type": "docs",
+        "title": "Comprehend User Guide",
+        "url": "https://docs.aws.amazon.com/comprehend/latest/dg/"
+      },
+      {
+        "type": "docs",
+        "title": "Custom Entity Recognition",
+        "url": "https://docs.aws.amazon.com/comprehend/latest/dg/custom-entity-recognition.html"
+      },
+      {
+        "type": "whitepaper",
+        "title": "NLP at Scale",
+        "url": "https://aws.amazon.com/machine-learning/"
+      },
+      {
+        "type": "example",
+        "title": "Sentiment Analysis",
+        "url": "https://docs.aws.amazon.com/comprehend/latest/dg/sentiment.html"
+      }
+    ],
+    "keyPoints": [
+      "Sentiment: Positive, Negative, Neutral, Mixed",
+      "Entities: PERSON, ORGANIZATION, LOCATION, DATE, QUANTITY",
+      "Key phrases: important noun phrases in text",
+      "Topic modeling: LDA for discovering topics in document collection",
+      "Cost: $0.0001 per unit (100 units = per 100 text characters)"
+    ]
+  },
+  {
+    "id": 39,
+    "day": 39,
+    "path": "Migration",
+    "title": "Database Migration Service (DMS)",
+    "prerequisites": [
+      6,
+      23
+    ],
+    "estimatedTime": 90,
+    "content": "AWS Database Migration Service for low-downtime migrations. Master heterogeneous migrations, validation, and ongoing replication for minimal disruption.",
+    "useCase": "Oracle → PostgreSQL migration: DMS continuously replicates from Oracle. Application points to PostgreSQL while DMS validates rows. Cutover during maintenance window (< 1 second downtime).",
+    "pitfalls": [
+      "Table constraints not migrated: foreign keys, triggers, stored procedures need manual setup. DMS only copies schema + data.",
+      "Data type incompatibilities: Oracle NUMBER(38,0) doesn't map to PostgreSQL numeric. Manual transformation rules required.",
+      "Large table locks during initial load: Oracle table locked for read/write during CDC setup. Plan for dev/test migration first.",
+      "Validation overhead: full table validation takes hours for large tables. Selective validation on key tables.",
+      "Ongoing replication overhead: CDC adds 10-20% latency to source database. Enable only if migration > 1 week."
+    ],
+    "relatedServices": [
+      "rds",
+      "postgres",
+      "oracle",
+      "dynamodb"
+    ],
+    "resources": [
+      {
+        "type": "docs",
+        "title": "DMS User Guide",
+        "url": "https://docs.aws.amazon.com/dms/latest/userguide/"
+      },
+      {
+        "type": "docs",
+        "title": "Task Assessment Report",
+        "url": "https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Tasks.html"
+      },
+      {
+        "type": "whitepaper",
+        "title": "Database Migration Best Practices",
+        "url": "https://aws.amazon.com/databases/migration/"
+      },
+      {
+        "type": "example",
+        "title": "Homogeneous vs Heterogeneous",
+        "url": "https://docs.aws.amazon.com/dms/latest/userguide/CHAP_GettingStarted.html"
+      }
+    ],
+    "keyPoints": [
+      "Replication instance: dms.t3.medium is usually fine for < 100GB",
+      "Source endpoint: connection to current database",
+      "Target endpoint: connection to AWS database",
+      "CDC: Capture Data Changes for ongoing replication",
+      "Validation: compare row-by-row between source/target, detects transformation bugs"
+    ]
+  },
+  {
+    "id": 40,
+    "day": 40,
+    "path": "Cost",
+    "title": "FinOps & Cost Culture",
+    "prerequisites": [
+      30,
+      33
+    ],
+    "estimatedTime": 75,
+    "content": "FinOps for cost management culture: chargeback models, cost allocation, team accountability, and driving cost optimization across engineering and product organizations.",
+    "useCase": "FinOps program: allocate costs to teams (chargeback), set monthly budgets, daily dashboards. Product team owns costs, engineers optimize. Result: 30% cost reduction without capacity cuts.",
+    "pitfalls": [
+      "Blame culture vs accountability: cost optimization is engineering responsibility, not procurement. Shift mindset.",
+      "No cost transparency: teams unaware of resource costs. Daily cost dashboards drive behavior change.",
+      "Chargeback model unfair: allocate cost proportionally, not equally (team A uses 10x resources, pays 10x).",
+      "Reserved vs Spot mismanagement: commitment too high/low, don't account for demand variability",
+      "Lack of forecasting: surprised by bill, cannot course-correct. Monthly forecasts vs actuals essential."
+    ],
+    "relatedServices": [
+      "ce",
+      "budgets",
+      "computeoptimizer",
+      "tagging"
+    ],
+    "resources": [
+      {
+        "type": "docs",
+        "title": "Cost Optimization on AWS",
+        "url": "https://aws.amazon.com/architecture/cost-optimization-strategies/"
+      },
+      {
+        "type": "docs",
+        "title": "AWS Well-Architected Cost Pillar",
+        "url": "https://docs.aws.amazon.com/wellarchitected/latest/cost-optimization-pillar/"
+      },
+      {
+        "type": "whitepaper",
+        "title": "FinOps Framework",
+        "url": "https://www.finops.org/"
+      },
+      {
+        "type": "example",
+        "title": "Cost Allocation Tags",
+        "url": "https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/cost-alloc-tags.html"
+      }
+    ],
+    "keyPoints": [
+      "Tagging strategy: cost center, project, owner, environment",
+      "Chargeback: showback (informational) vs chargeback (financial impact)",
+      "Forecasting: project next month costs, budget alerts",
+      "Reserved Instances & Savings Plans: commit 30%+ of compute upfront",
+      "Spot instances: use for non-critical workloads, savings are real"
+    ]
+  },
+  {
+    "id": 41,
+    "day": 41,
+    "path": "Compute",
+    "title": "Batch Processing & HPC on AWS",
+    "prerequisites": [
+      3,
+      11
+    ],
+    "estimatedTime": 90,
+    "content": "AWS Batch for large-scale parallel computing. Master job definitions, compute environments, and cost optimization for scientific computing and batch workloads.",
+    "useCase": "Genomics analysis: 10k samples, each takes 1hr on 4 CPUs. AWS Batch scales to 2500 jobs in parallel, completes in 2.4 hrs. Spot instances cost $10 vs $100 on-demand.",
+    "pitfalls": [
+      "Job definition versioning ignored: job runs old version if not specified. Always pin revision number.",
+      "Compute environment underutilized: Spot instance type too narrow. Allow multiple instance types (c5, c6i, m5, m6i).",
+      "Job submission rate-limited: Lambda can only submit 10 jobs/sec due to API throttling. Batch operations if > 1000 jobs.",
+      "Array job failures not handled: if one array job fails, assume retry. Set max retries per job.",
+      "S3 egress costs not budgeted: 1PB out = $10k. Cache outputs locally, archive to Glacier if long-term storage."
+    ],
+    "relatedServices": [
+      "ec2",
+      "s3",
+      "lambda",
+      "efs"
+    ],
+    "resources": [
+      {
+        "type": "docs",
+        "title": "AWS Batch User Guide",
+        "url": "https://docs.aws.amazon.com/batch/latest/userguide/"
+      },
+      {
+        "type": "docs",
+        "title": "Batch Job Definition",
+        "url": "https://docs.aws.amazon.com/batch/latest/userguide/job_definitions.html"
+      },
+      {
+        "type": "whitepaper",
+        "title": "HPC on AWS",
+        "url": "https://aws.amazon.com/hpc/"
+      },
+      {
+        "type": "example",
+        "title": "Job Arrays & Dependencies",
+        "url": "https://docs.aws.amazon.com/batch/latest/userguide/job_dependencies.html"
+      }
+    ],
+    "keyPoints": [
+      "Job Queues: route jobs to compute environments by priority",
+      "Compute Environments: EC2, Fargate, or on-prem via Outposts",
+      "Job Arrays: parallel iterations of same job, one submission",
+      "Job Dependencies: task-based workflows (DAG)",
+      "Cost: pay for compute resources only, Batch orchestration free"
+    ]
+  },
+  {
+    "id": 42,
+    "day": 42,
+    "path": "Networking",
+    "title": "Network Load Balancer & NLB Advanced",
+    "prerequisites": [
+      5,
+      20
+    ],
+    "estimatedTime": 75,
+    "content": "Network Load Balancer for ultra-high performance, low-latency load balancing. Master connection draining, target types, and optimization for millions of requests per second.",
+    "useCase": "Gaming server load balancing: NLB handles 4M requests/sec at <100µs latency (vs ALB 10ms). Connection draining ensures in-flight game sessions complete before instance removal.",
+    "pitfalls": [
+      "NLB connection reset: asymmetric routing causes resets. Ensure all targets route symmetrically.",
+      "Health check misconfiguration: TCP health check says instance healthy even though app crashed. Use ECS task health + NLB.",
+      "Sticky sessions with cross-zone: NLB rebalances, but session moves to different zone. Stateless design better.",
+      "UDP traffic bottleneck: single target receives all traffic if traffic hash doesn't distribute well. Try multiple NLBs.",
+      "TLS handshake latency: offload SSL to NLB vs instance (saves CPU, risk: NLB SSL cert expiry). Monitor cert rotation."
+    ],
+    "relatedServices": [
+      "target-groups",
+      "instance-types",
+      "autoscaling",
+      "cloudwatch"
+    ],
+    "resources": [
+      {
+        "type": "docs",
+        "title": "Network Load Balancer Guide",
+        "url": "https://docs.aws.amazon.com/elasticloadbalancing/latest/network/"
+      },
+      {
+        "type": "docs",
+        "title": "NLB vs ALB vs CLB",
+        "url": "https://docs.aws.amazon.com/elasticloadbalancing/latest/application/"
+      },
+      {
+        "type": "whitepaper",
+        "title": "Load Balancing Best Practices",
+        "url": "https://aws.amazon.com/blogs/networking-and-content-delivery/"
+      },
+      {
+        "type": "example",
+        "title": "Cross-Zone Optimization",
+        "url": "https://docs.aws.amazon.com/elasticloadbalancing/latest/network/network-load-balancers.html"
+      }
+    ],
+    "keyPoints": [
+      "Throughput: 4M requests/sec, 1M+ concurrent connections",
+      "Latency: < 100 microseconds (vs ALB 10ms)",
+      "Connection draining: gracefully close in-flight requests",
+      "Target types: instance, IP, Lambda",
+      "Cross-zone disabled by default (save data transfer), enable for HA"
+    ]
+  },
+  {
+    "id": 43,
+    "day": 43,
+    "path": "Security",
+    "title": "Threat Detection & GuardDuty",
+    "prerequisites": [
+      17,
+      33
+    ],
+    "estimatedTime": 75,
+    "content": "Amazon GuardDuty for intelligent threat detection. Master finding types, response automation, and integration with SIEM solutions for continuous security monitoring.",
+    "useCase": "Threat detection: GuardDuty AI identifies compromise (unusual API calls, data exfiltration). EventBridge triggers Lambda to isolate instance, notify security team. Slack notification in < 1 second.",
+    "pitfalls": [
+      "False positives on high-volume developers: power users trigger findings (brute force from legitimate internal IP). Whitelist necessary.",
+      "Finding severity misaligned: Medium finding might be critical (data exfil = High, but misconfigured SG = Low).",
+      "No retention of old findings: 90-day retention means missing patterns. Export to S3/Security Hub for long-term.",
+      "Cost scales with API calls: 50M API calls/month = $75. Monitor compute-heavy workloads that might trigger false positives.",
+      "SIEM integration lagging: findings take 5+ minutes to appear in Splunk due to export delays. Real-time response not possible."
+    ],
+    "relatedServices": [
+      "eventbridge",
+      "security-hub",
+      "lambda",
+      "sns"
+    ],
+    "resources": [
+      {
+        "type": "docs",
+        "title": "GuardDuty User Guide",
+        "url": "https://docs.aws.amazon.com/guardduty/latest/ug/"
+      },
+      {
+        "type": "docs",
+        "title": "GuardDuty Finding Types",
+        "url": "https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_finding-types.html"
+      },
+      {
+        "type": "whitepaper",
+        "title": "Threat Detection Best Practices",
+        "url": "https://aws.amazon.com/blogs/security/"
+      },
+      {
+        "type": "example",
+        "title": "Automated Response",
+        "url": "https://docs.aws.amazon.com/guardduty/latest/ug/findings-remediation.html"
+      }
+    ],
+    "keyPoints": [
+      "Finding types: EC2 findings, IAM findings, Kubernetes Audit Logs",
+      "Severity levels: Low, Medium, High, Critical",
+      "Whitelists: suppress findings from known-good activities",
+      "Cost: $0.015/100k API/event records (typically $20-50/month)",
+      "Exported findings: send to S3, Events, or third-party SIEM"
+    ]
+  },
+  {
+    "id": 44,
+    "day": 44,
+    "path": "Databases",
+    "title": "DocumentDB & NoSQL Advanced",
+    "prerequisites": [
+      7,
+      22
+    ],
+    "estimatedTime": 75,
+    "content": "Amazon DocumentDB for MongoDB-compatible documents at scale. Master sharding, indexes, and performance tuning for document-oriented workloads.",
+    "useCase": "SAAS with complex schemas: DocumentDB supports flexible documents (add fields without schema migration). Index on frequently-queried nested fields. Replication provides HA.",
+    "pitfalls": [
+      "Index bloat: excessive indexes slow writes. Index only queries, not every field. Monitor index size.",
+      "Large documents: each > 1MB causes problems (network overhead, memory pressure). Denormalize carefully.",
+      "No built-in transactions: cannot atomically update multiple documents. DynamoDB + Lambda if ACID critical.",
+      "Slow queries not obvious: database doesn't optimize poorly-written queries like SQL. Manual explain() review needed.",
+      "Backup storage costs: DocumentDB backups cost more than RDS. Archive to S3 if long-term retention needed."
+    ],
+    "relatedServices": [
+      "mongodb",
+      "dynamodb",
+      "lambda",
+      "s3"
+    ],
+    "resources": [
+      {
+        "type": "docs",
+        "title": "DocumentDB User Guide",
+        "url": "https://docs.aws.amazon.com/documentdb/latest/developerguide/"
+      },
+      {
+        "type": "docs",
+        "title": "Query Tuning",
+        "url": "https://docs.aws.amazon.com/documentdb/latest/developerguide/functional-examples.html"
+      },
+      {
+        "type": "whitepaper",
+        "title": "Document Database Patterns",
+        "url": "https://aws.amazon.com/blogs/database/"
+      },
+      {
+        "type": "example",
+        "title": "Indexing Strategy",
+        "url": "https://docs.aws.amazon.com/documentdb/latest/developerguide/working_with_indexes.html"
+      }
+    ],
+    "keyPoints": [
+      "MongoDB compatible: drivers, queries work as-is",
+      "Automatic sharding: distribute data by shard key",
+      "ACID transactions: single document only (transactions in progress)",
+      "Backup retention: 1-35 days, point-in-time recovery",
+      "Cost: $0.80/month/GB (1GB minimum, auto-scales to 65TB)"
+    ]
+  },
+  {
+    "id": 45,
+    "day": 45,
+    "path": "Serverless",
+    "title": "API Gateway & Lambda Optimization",
+    "prerequisites": [
+      9,
+      10
+    ],
+    "estimatedTime": 90,
+    "content": "Optimize API Gateway and Lambda for cost and performance. Master payload compression, cold starts, memory tuning, and caching strategies for production APIs.",
+    "useCase": "API serving 100k req/sec: gzip payloads (50% smaller), API caching (1hr TTL, 90% cache hits, no Lambda invocation). Lambda 3GB memory (faster cold starts than 128MB). CloudFront in front for geographic routing.",
+    "pitfalls": [
+      "Lambda cold start spike: startup every 15 min if no traffic. Scheduled warming (CloudWatch) every 5 min adds cost but prevents spikes.",
+      "Memory = CPU: 128MB = 25% CPU. If function takes 10s at 128MB, upgrade to 1024MB (takes 1s = 10x faster, better $/invocation).",
+      "API Gateway payload limit: 10MB max (requests > 10MB fail). Few users testing with large files discover this at scale.",
+      "Throttling not obvious: if API Gateway throttled, Lambda still charged for concurrent connections. Reduce upstream traffic.",
+      "Unauthorized requests billable: 401/403 responses cost same as 200. WAF + API key validation upstream to prevent abuse."
+    ],
+    "relatedServices": [
+      "apigateway",
+      "lambda",
+      "cloudfront",
+      "waf"
+    ],
+    "resources": [
+      {
+        "type": "docs",
+        "title": "Lambda Best Practices",
+        "url": "https://docs.aws.amazon.com/lambda/latest/dg/best-practices.html"
+      },
+      {
+        "type": "docs",
+        "title": "API Gateway Caching",
+        "url": "https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-caching.html"
+      },
+      {
+        "type": "whitepaper",
+        "title": "Serverless Architecture Patterns",
+        "url": "https://aws.amazon.com/serverless/"
+      },
+      {
+        "type": "example",
+        "title": "Cold Start Optimization",
+        "url": "https://aws.amazon.com/blogs/compute/operating-lambda-performance-optimization/"
+      }
+    ],
+    "keyPoints": [
+      "Lambda reserved concurrency: prepay for baseline, pay-as-you-go for burst",
+      "Provisioned concurrency: warm lambdas always ready, higher cost",
+      "Memory tuning: 128-10240MB, higher memory = more CPU",
+      "API Gateway caching: reduce Lambda invocations, 1hr-35hr TTL",
+      "Payload compression: gzip reduces bandwidth 50-90%"
+    ]
+  },
+  {
+    "id": 46,
+    "day": 46,
+    "path": "DevOps",
+    "title": "Organizations & Multi-Account Strategy",
+    "prerequisites": [
+      2,
+      33
+    ],
+    "estimatedTime": 90,
+    "content": "AWS Organizations for centralized multi-account management. Master consolidated billing, SCPs (Service Control Policies), and cross-account access for scalable enterprise governance.",
+    "useCase": "Enterprise org: 100 accounts (dev/staging/prod per team, each region per product). Consolidated billing saves 10% on commitment. SCPs prevent deletion of critical resources (backups, KMS keys). Cross-account roles allow engineers access without switching.",
+    "pitfalls": [
+      "Root account internet-facing: never expose root account. Create separate dev account for experimentation.",
+      "SCPs too permissive: deny S3 deletion but allow s3:PutObject (can delete via overwrite). Explicit deny required.",
+      "Cross-account role chain: role A assumes role B assumes role C. 15-minute STS token expiry doesn't chain. Plan for < 2 hops.",
+      "Consolidated billing surprise: disable unused service (Redshift) globally, but one prod account forgets. Costs explode.",
+      "Least privilege at account level: shared account for multiple teams masks which team exceeded budget. Separate accounts ideal."
+    ],
+    "relatedServices": [
+      "iam",
+      "console",
+      "trusted-advisor",
+      "config"
+    ],
+    "resources": [
+      {
+        "type": "docs",
+        "title": "AWS Organizations Guide",
+        "url": "https://docs.aws.amazon.com/organizations/latest/userguide/"
+      },
+      {
+        "type": "docs",
+        "title": "Service Control Policies",
+        "url": "https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scps.html"
+      },
+      {
+        "type": "whitepaper",
+        "title": "Multi-Account Security Strategy",
+        "url": "https://docs.aws.amazon.com/whitepapers/latest/organizing-your-aws-environment/"
+      },
+      {
+        "type": "example",
+        "title": "Centralized Logging",
+        "url": "https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies.html"
+      }
+    ],
+    "keyPoints": [
+      "Organization root: all accounts inherit policies",
+      "OUs (Organizational Units): group accounts by stage/line-of-business",
+      "SCPs: restrict actions at account level (not as fine-grained as IAM)",
+      "Consolidated billing: receive one bill for all accounts, volume discounts applied",
+      "CloudTrail organization trail: centralized audit across accounts"
+    ]
+  },
+  {
+    "id": 47,
+    "day": 47,
+    "path": "Data",
+    "title": "Lake Formation & Governance",
+    "prerequisites": [
+      26,
+      37
+    ],
+    "estimatedTime": 75,
+    "content": "AWS Lake Formation for data lake governance. Master centralized access control, data quality, and metadata management at petabyte scale.",
+    "useCase": "Data lake governance: Lake Formation catalog defines who can query which tables. Finance team cannot see Engineering data lake tables (enforced via Lake Formation permissions). Data quality checks flag bad data before query.",
+    "pitfalls": [
+      "IAM still required: Lake Formation supplements IAM, doesn't replace it. Both must be aligned or confusion.",
+      "Crawler creates wrong schema: raw data without validation creates unpredictable schemas. Glue schema registry helps.",
+      "Cross-account access complex: Lake Formation cross-account grants require both accounts, hard to debug.",
+      "Parquet partitions misaligned: Athena reads partition projection, but actual S3 structure differs. Causes missing data.",
+      "No enforcement of data quality: rules defined but not enforced on ingestion. DLQ (Dead Letter Queue) for bad records."
+    ],
+    "relatedServices": [
+      "glue",
+      "athena",
+      "redshift",
+      "s3"
+    ],
+    "resources": [
+      {
+        "type": "docs",
+        "title": "Lake Formation User Guide",
+        "url": "https://docs.aws.amazon.com/lake-formation/latest/userguide/"
+      },
+      {
+        "type": "docs",
+        "title": "Data Permissions",
+        "url": "https://docs.aws.amazon.com/lake-formation/latest/userguide/permissions-reference.html"
+      },
+      {
+        "type": "whitepaper",
+        "title": "Data Lake Architecture",
+        "url": "https://aws.amazon.com/lake-formation/"
+      },
+      {
+        "type": "example",
+        "title": "Central Governance",
+        "url": "https://docs.aws.amazon.com/lake-formation/latest/userguide/how-it-works.html"
+      }
+    ],
+    "keyPoints": [
+      "Data Catalog: central metadata store, integrates Glue",
+      "Access Control: row/column-level permissions",
+      "Data Quality: rules for completeness, uniqueness, range checks",
+      "Cross-account sharing: datasets shared securely between accounts",
+      "Cost: Lake Formation free, only pay for Glue/Athena usage"
+    ]
+  },
+  {
+    "id": 48,
+    "day": 48,
+    "path": "AI/ML",
+    "title": "Forecast & Lookout Services",
+    "prerequisites": [
+      28,
+      30
+    ],
+    "estimatedTime": 75,
+    "content": "Amazon Forecast for time-series forecasting, Lookout for anomaly detection in metrics and logs. Master demand forecasting, and anomaly detection for operational insights.",
+    "useCase": "Retail demand forecasting: Forecast learns from historical sales, produces 90-day forecast (accuracy 95%+ vs 80% manual). Inventory team tunes safety stock. Lookout detects unusual metrics (traffic spike, error rate), alerts production.",
+    "pitfalls": [
+      "Forecast accuracy depends on data quality: GIGO (garbage in, garbage out). 2 years of clean history essential",
+      "Lookout detects legitimate spikes: Black Friday traffic spike flagged as anomaly. Adjust sensitivity seasonally.",
+      "Forecast retraining frequency: weekly training costs, but data rarely changes (retrain monthly is more cost-effective).",
+      "Not all metrics suitable: Forecast works on univariate trends, not multivariate relationships. Try custom SageMaker models.",
+      "Cold start forecasting: new product with < 3 months history, Forecast performs poorly. Use manual judgement + expert input."
+    ],
+    "relatedServices": [
+      "sagemaker",
+      "dynamodb",
+      "sns",
+      "eventbridge"
+    ],
+    "resources": [
+      {
+        "type": "docs",
+        "title": "Amazon Forecast",
+        "url": "https://docs.aws.amazon.com/forecast/latest/userguide/"
+      },
+      {
+        "type": "docs",
+        "title": "Amazon Lookout for Metrics",
+        "url": "https://docs.aws.amazon.com/lookoutformetrics/latest/user-guide/"
+      },
+      {
+        "type": "whitepaper",
+        "title": "Time-Series Forecasting",
+        "url": "https://aws.amazon.com/blogs/machine-learning/"
+      },
+      {
+        "type": "example",
+        "title": "Building Predictive Models",
+        "url": "https://docs.aws.amazon.com/forecast/latest/userguide/getting-started-forecast.html"
+      }
+    ],
+    "keyPoints": [
+      "Forecast accuracy: MAPE (Mean Absolute Percentage Error) metric",
+      "Training data: 1 year minimum, 2+ years ideal for seasonal patterns",
+      "Lookout: detects anomalies in CloudWatch metrics or custom data",
+      "Cost: Forecast $0.84/per-dataset-hour training, Lookout $0.30/GB anomaly score",
+      "Export forecasts: batch predictions to S3, or real-time API"
+    ]
+  },
+  {
+    "id": 49,
+    "day": 49,
+    "path": "Migration",
+    "title": "Application Migration & MGN",
+    "prerequisites": [
+      32,
+      39
+    ],
+    "estimatedTime": 90,
+    "content": "AWS Application Migration Service (MGN) for automated lift-and-shift migrations. Master replication, testing, and cutover strategies for minimal disruption to on-prem workloads.",
+    "useCase": "Datacenter exit: 500 servers migrate via MGN. Continuous replication from on-prem. Weekly test cutover validates network, builds, performance. Final cutover < 5 min downtime.",
+    "pitfalls": [
+      "Network cutover timing: MGN ready, but DNS not updated, application unreachable. Network team must coordinate.",
+      "License reassignment: some software tied to MAC addresses. Changing NICs during migration breaks licenses. Plan recapture.",
+      "Post-migration performance: application runs, but slow (network latency, disk contention). Baseline before cutover.",
+      "Rollback untested: migration successful, but business wants rollback after 1hr. Test rollback procedure first.",
+      "Data lag in replication: MGN replication < 1s but not zero. Final cutover may have 1-2 sec of data loss if not properly stopped."
+    ],
+    "relatedServices": [
+      "dms",
+      "ssm",
+      "eventbridge",
+      "lambda"
+    ],
+    "resources": [
+      {
+        "type": "docs",
+        "title": "Application Migration Service",
+        "url": "https://docs.aws.amazon.com/mgn/latest/ug/"
+      },
+      {
+        "type": "docs",
+        "title": "Post-Migration Optimization",
+        "url": "https://docs.aws.amazon.com/mgn/latest/ug/post-launch-settings.html"
+      },
+      {
+        "type": "whitepaper",
+        "title": "Migration Best Practices",
+        "url": "https://aws.amazon.com/migration/"
+      },
+      {
+        "type": "example",
+        "title": "Test Cutover Automation",
+        "url": "https://docs.aws.amazon.com/mgn/latest/ug/agentless-mgn.html"
+      }
+    ],
+    "keyPoints": [
+      "MGN: continuous replication agents on source servers",
+      "Network settings: configure AWS replica network topology",
+      "Launch templates: automate instance configuration",
+      "Test mode: launch instances without production cutover",
+      "Cutover: final launch to prod, source servers can be decommissioned"
+    ]
+  },
+  {
+    "id": 50,
+    "day": 50,
+    "path": "Cost",
+    "title": "Real-World Cost Optimization Capstone",
+    "prerequisites": [
+      30,
+      40,
+      46
+    ],
+    "estimatedTime": 120,
+    "content": "Capstone project: audit a multi-account AWS environment, identify cost optimization opportunities (Compute Optimizer, Reserved Instances, Spot, Storage classes), and implement winning strategies.",
+    "useCase": "Cost audit: identify 100 underutilized m5.large instances (Compute Optimizer recommends t3.medium). Switch to Spot saves 40%. Consolidate EBS snapshots, automated daily. Implement chargeback model. Result: 35% cost reduction ($500k/year).",
+    "pitfalls": [
+      "Analysis paralysis: perfect is enemy of good. Start with top 3 opportunities (Compute, Storage, Commitments)",
+      "Organizational resistance: engineers fear constraints. Position as \"optimization\" not \"cost control\"",
+      "One-time vs recurring savings: initial commitment savings don't compound. Must continually right-size.",
+      "Change fatigue: too many changes at once causes instability. Phased rollout with validation gates",
+      "Stakeholder alignment: finance wants max savings, ops wants stability. Balance is key."
+    ],
+    "relatedServices": [
+      "ce",
+      "computeoptimizer",
+      "budgets",
+      "tagging"
+    ],
+    "resources": [
+      {
+        "type": "docs",
+        "title": "Cost Optimization Roadmap",
+        "url": "https://aws.amazon.com/architecture/cost-optimization-strategies/"
+      },
+      {
+        "type": "whitepaper",
+        "title": "6 Pillar Well-Architected Framework",
+        "url": "https://docs.aws.amazon.com/wellarchitected/latest/userguide/"
+      },
+      {
+        "type": "example",
+        "title": "Audit Checklist",
+        "url": "https://aws.amazon.com/aws-cost-management/cost-optimization/"
+      },
+      {
+        "type": "tool",
+        "title": "AWS Well-Architected Review",
+        "url": "https://aws.amazon.com/architecture/well-architected/"
+      }
+    ],
+    "keyPoints": [
+      "Audit current state: Cost Explorer, Trusted Advisor, Compute Optimizer",
+      "Identify quick wins: 70/20/10 rule (70% of savings from 20% of changes)",
+      "Implement with safeguards: monitoring, alerts, rollback plans",
+      "Chargeback model: allocate costs, drive ownership",
+      "Automation: Lifecycle policies, maintenance windows, scheduled scaling"
+    ]
+  },
+  {
+    "id": 51,
+    "day": 51,
+    "path": "Advanced",
+    "title": "Enterprise Security & Compliance",
+    "prerequisites": [
+      33,
+      43,
+      48
+    ],
+    "estimatedTime": 90,
+    "content": "Enterprise security: compliance frameworks (SOC2, PCI-DSS, HIPAA), security automation, and incident response workflows at scale.",
+    "useCase": "HIPAA-compliant SAAS: end-to-end encryption (KMS), audit trails (CloudTrail), access logging (VPC Flow Logs, S3), automatic backup, disaster recovery (multi-region RDS). Annual audit passes first time, no findings.",
+    "pitfalls": [
+      "Compliance checkbox culture: audit passes, but enforcement gaps remain. Continuous monitoring > once-per-year.",
+      "Encryption key management: keys lost/deleted = data inaccessible. Key rotation + archival strategy required.",
+      "Incident response untested: breach occurs, team improvises. Tabletop exercises quarterly.",
+      "Third-party risk: vendor breach impacts you. Vendor security questionnaires + SOC2 audit required.",
+      "Data residency restrictions: some regulations require data in specific regions. Multi-region failover complicates this."
+    ],
+    "relatedServices": [
+      "kms",
+      "config",
+      "guardduty",
+      "cloudtrail"
+    ],
+    "resources": [
+      {
+        "type": "docs",
+        "title": "Compliance & Governance",
+        "url": "https://aws.amazon.com/compliance/"
+      },
+      {
+        "type": "whitepaper",
+        "title": "HIPAA Compliance",
+        "url": "https://aws.amazon.com/compliance/hipaa-eligible-services-reference/"
+      },
+      {
+        "type": "whitepaper",
+        "title": "PCI-DSS on AWS",
+        "url": "https://aws.amazon.com/compliance/pci-dss-level-1-compliance/"
+      },
+      {
+        "type": "example",
+        "title": "SOC2 Compliance",
+        "url": "https://aws.amazon.com/compliance/soc/"
+      }
+    ],
+    "keyPoints": [
+      "Shared responsibility: AWS secures infrastructure, you secure data/config",
+      "Compliance frameworks: SOC2 Type II, PCI-DSS, HIPAA, FedRAMP",
+      "Key pillars: identity, logging, encryption, network, incident response",
+      "Monitoring: 24/7 detection via GuardDuty, CloudTrail, Config",
+      "Documentation: maintain compliance evidence (AWS Audit Manager)"
+    ]
+  },
+  {
+    "id": 52,
+    "day": 52,
+    "path": "Advanced",
+    "title": "Multi-Region & Disaster Recovery",
+    "prerequisites": [
+      20,
+      23,
+      49
+    ],
+    "estimatedTime": 90,
+    "content": "Multi-region architecture for disaster recovery and global availability. Master failover patterns, data replication, and RTO/RPO optimization.",
+    "useCase": "Critical application: primary (us-east-1) + secondary (eu-west-1). RDS Global Database with < 1s replication. Route 53 health checks fail over in 30s. RTO = 30s, RPO = 1s.",
+    "pitfalls": [
+      "Asymmetric regions: primary has more capacity, secondary underprovisioned. Failover causes unavailability. Plan for max capacity.",
+      "Data sync delays: 100ms cross-region latency, eventual consistency for 100ms. Application must handle stale reads.",
+      "Failover untested: assume it works, but DNS TTL caches resolve to dead endpoint. Regular failover drills required.",
+      "Cost of redundancy: 2x infrastructure. Either accept cost or reduce SLA (RTO 1 hour vs 5 min).",
+      "Application coupling: app hardcoded to us-east-1 endpoint. Must use DNS alias + application config for flexibility."
+    ],
+    "relatedServices": [
+      "route53",
+      "rds-global",
+      "dynamodb-global",
+      "cloudformation-stacksets"
+    ],
+    "resources": [
+      {
+        "type": "docs",
+        "title": "Disaster Recovery on AWS",
+        "url": "https://docs.aws.amazon.com/whitepapers/latest/disaster-recovery-workloads-on-aws/"
+      },
+      {
+        "type": "docs",
+        "title": "Multi-Region Architecture",
+        "url": "https://aws.amazon.com/blogs/architecture/"
+      },
+      {
+        "type": "whitepaper",
+        "title": "Well-Architected Reliability Pillar",
+        "url": "https://docs.aws.amazon.com/wellarchitected/latest/reliability-pillar/"
+      },
+      {
+        "type": "example",
+        "title": "Active-Passive Failover",
+        "url": "https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-policy-failover.html"
+      }
+    ],
+    "keyPoints": [
+      "RTO: Recovery Time Objective (target downtime)",
+      "RPO: Recovery Point Objective (max acceptable data loss)",
+      "Backup + restore: hours to restore (low cost)",
+      "Pilot light: secondary has minimal resources, scales on failover",
+      "Hot standby: secondary always ready, failover immediate",
+      "Active-active: both regions serve traffic, no downtime on failure"
+    ]
+  },
+  {
+    "id": 53,
+    "day": 53,
+    "path": "Advanced",
+    "title": "Edge Computing & Outposts",
+    "prerequisites": [
+      5,
+      42
+    ],
+    "estimatedTime": 75,
+    "content": "AWS Edge Computing services: CloudFront, Lambda@Edge, Local Zones, and AWS Outposts. Master low-latency compute at the edge and hybrid on-prem/AWS deployments.",
+    "useCase": "E-commerce edge optimization: CloudFront cache product pages at edge (50ms instead of 300ms from origin). Lambda@Edge on cache miss rewrites URLs, personalizes content. Outpost in mega-datacenter runs sensitive ML on-prem.",
+    "pitfalls": [
+      "Lambda@Edge cold starts: 1-2s latency overhead on cache miss. Pre-warm critical functions.",
+      "Outpost network latency: connection to region adds 10-100ms. Not suitable for deterministic latency SLOs.",
+      "Edge location coverage: not all use cases have edge location nearby (rural areas, small countries).",
+      "Cost of replication: edge resources don't save money, only latency. Multiple copies of data increase storage costs.",
+      "Inconsistent behavior: edge logic differs from origin, caching policies cause confusion. Keep edge logic simple."
+    ],
+    "relatedServices": [
+      "cloudfront",
+      "lambda",
+      "ec2-local-zones",
+      "outposts"
+    ],
+    "resources": [
+      {
+        "type": "docs",
+        "title": "CloudFront Developer Guide",
+        "url": "https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/"
+      },
+      {
+        "type": "docs",
+        "title": "Lambda@Edge",
+        "url": "https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/lambda-at-edge.html"
+      },
+      {
+        "type": "whitepaper",
+        "title": "Edge Computing Patterns",
+        "url": "https://aws.amazon.com/edge/"
+      },
+      {
+        "type": "example",
+        "title": "Outposts Deployment",
+        "url": "https://docs.aws.amazon.com/outposts/latest/userguide/"
+      }
+    ],
+    "keyPoints": [
+      "CloudFront: 600+ edge locations, <50ms global latency",
+      "Lambda@Edge: compute at edge, lightweight transformations",
+      "Local Zones: availability zones in major metros, single-digit ms latency from city",
+      "Outposts: AWS hardware in your datacenter, hybrid workloads",
+      "Cost: CloudFront bandwidth savings vs latency gains, Outposts premium on hardware"
+    ]
+  },
+  {
+    "id": 54,
+    "day": 54,
+    "path": "Advanced",
+    "title": "Sustainable Computing & Green AWS",
+    "prerequisites": [
+      30,
+      46,
+      50
+    ],
+    "estimatedTime": 75,
+    "content": "Sustainable AWS: carbon-aware computing, renewable energy, and optimization for environmental responsibility.",
+    "useCase": "Green ops: choose regions powered by renewable energy (Oregon 80% hydro). Schedule batch jobs during off-peak hours (lower grid emissions). Right-size instances (smaller = less energy). Result: 50% carbon footprint reduction.",
+    "pitfalls": [
+      "Sustainability & cost alignment: usually aligned (efficiency saves money), but not always (renewable energy premium in some regions).",
+      "Carbon footprint measurement: AWS provides estimates, but scope 3 emissions complex. Third-party verification required for claims.",
+      "Performance vs sustainability: sometimes optimal configuration (more regions, frequent shifting) increases carbon. Accept trade-offs.",
+      "Customer expectations: some want green, others want cheap. Position as both (long-term, efficiency wins).",
+      "Outdated hardware: Graviton chips more efficient than x86, but migration costs. Phased transition over 2+ years."
+    ],
+    "relatedServices": [
+      "ec2-graviton",
+      "compute-optimizer",
+      "sustainability-report",
+      "energy-dashboard"
+    ],
+    "resources": [
+      {
+        "type": "docs",
+        "title": "AWS Sustainability",
+        "url": "https://aws.amazon.com/sustainability/"
+      },
+      {
+        "type": "whitepaper",
+        "title": "Sustainable Architecture on AWS",
+        "url": "https://aws.amazon.com/blogs/aws-sustainability/"
+      },
+      {
+        "type": "example",
+        "title": "Carbon Footprint Estimator",
+        "url": "https://aws.amazon.com/blogs/aws-cloud-financial-management/"
+      },
+      {
+        "type": "tool",
+        "title": "AWS Sustainability Dashboard",
+        "url": "https://aws.amazon.com/blog/aws-sustainability/"
+      }
+    ],
+    "keyPoints": [
+      "Region selection: AWS publishes carbon intensity (gCO2/kWh)",
+      "Graviton chips: 40% more efficient than x86, cost 20% less",
+      "Batch scheduling: run during renewable-rich hours",
+      "Right-sizing: smaller instances = lower energy",
+      "Sustainable optimization: cost ++ efficiency + sustainability"
+    ]
+  },
+  {
+    "id": 55,
+    "day": 55,
+    "path": "Advanced",
+    "title": "AWS ML Ops & Feature Store",
+    "prerequisites": [
+      28,
+      44,
+      47
+    ],
+    "estimatedTime": 90,
+    "content": "Production ML pipelines: SageMaker Feature Store, Model Registry, and continuous training. Master feature engineering, model versioning, and MLOps workflows for enterprise ML.",
+    "useCase": "Recommender system: SageMaker Feature Store stores customer/product features (100GB dataset, real-time + batch). Model Registry tracks 200+ models. Pipeline auto-retrains on new data. A/B tests winner, deploys to prod SageMaker endpoints.",
+    "pitfalls": [
+      "Feature engineering bottleneck: 80% of ML time spent on features, not training. Automate feature pipelines early.",
+      "Model decay undetected: trained model good for 3 months, degrades after. Model Monitor catches data drift, triggers retraining.",
+      "Training cost explosion: iterating on models without controls costs $1000s/day. Budget alerts + approval gates required.",
+      "Cross-team coordination: data team + ML team + ops team, poor communication causes rework. MLOps platform unifies.",
+      "Legacy models not versioned: cannot rollback to working version. Registry enforces versioning discipline."
+    ],
+    "relatedServices": [
+      "sagemaker-feature-store",
+      "sagemaker-pipelines",
+      "mlflow",
+      "airflow"
+    ],
+    "resources": [
+      {
+        "type": "docs",
+        "title": "SageMaker Feature Store",
+        "url": "https://docs.aws.amazon.com/sagemaker/latest/dg/feature-store.html"
+      },
+      {
+        "type": "docs",
+        "title": "SageMaker Pipelines",
+        "url": "https://docs.aws.amazon.com/sagemaker/latest/dg/pipelines.html"
+      },
+      {
+        "type": "whitepaper",
+        "title": "MLOps on AWS",
+        "url": "https://aws.amazon.com/blogs/machine-learning/"
+      },
+      {
+        "type": "example",
+        "title": "Feature Engineering Patterns",
+        "url": "https://aws.amazon.com/blogs/machine-learning/"
+      }
+    ],
+    "keyPoints": [
+      "Feature Store: online + offline, real-time low-latency access",
+      "Model Registry: versioning, staging (dev/prod), approvals",
+      "Pipelines: DAG-based ML workflows, schedule + trigger",
+      "Data quality: validate features, detect drift",
+      "Cost control: quota limits, auto-shutdown unused resources"
+    ]
+  },
+  {
+    "id": 56,
+    "day": 56,
+    "path": "Advanced",
+    "title": "Batch Analytics & Business Intelligence",
+    "prerequisites": [
+      27,
+      37,
+      45
+    ],
+    "estimatedTime": 90,
+    "content": "Analytics-ready data architectures: combining Glue, Athena, Redshift, and QuickSight for BI at scale. Master data warehousing vs data lakes, ETL vs ELT, and self-service analytics.",
+    "useCase": "Modern BI stack: data lands in S3 (raw), Glue crawlers infer schema, Athena queries for ad-hoc (everyone uses it, cheap), Redshift copy for known reports (faster, cost-optimized). QuickSight dashboard auto-refreshes daily.",
+    "pitfalls": [
+      "Query sprawl: everyone writes independent Athena queries, some redundant. Central schema + templates control costs.",
+      "Data quality poor: garbage in dashboards, leadership makes bad decisions. Data quality checks before publishing.",
+      "Redshift copying excessive: data hot in S3, but copy to Redshift only used 1x/day. Athena-only might be cheaper.",
+      "BI tool lock-in: invested in Tableau, can't migrate to QuickSight. Keep data in S3 for flexibility.",
+      "Sprawling dimensions: snowflake schema with 100 dimensions, queries timeout. Denormalize fact tables if needed."
+    ],
+    "relatedServices": [
+      "athena",
+      "redshift",
+      "quicksight",
+      "glue"
+    ],
+    "resources": [
+      {
+        "type": "docs",
+        "title": "Modern Analytics Architecture",
+        "url": "https://aws.amazon.com/blogs/big-data/"
+      },
+      {
+        "type": "whitepaper",
+        "title": "Data Lake Best Practices",
+        "url": "https://aws.amazon.com/datakeep/"
+      },
+      {
+        "type": "example",
+        "title": "QuickSight Dashboard",
+        "url": "https://docs.aws.amazon.com/quicksight/latest/user/creating-dashboards.html"
+      },
+      {
+        "type": "tool",
+        "title": "AWS Glue Studio",
+        "url": "https://aws.amazon.com/glue/"
+      }
+    ],
+    "keyPoints": [
+      "Data lake: S3 as single source of truth (raw, processed)",
+      "ELT: extract raw to S3, transform on-demand via Athena",
+      "Redshift: curated warehouse, known reports, <1s queries",
+      "Lakehouse: merges lake (flexibility) + warehouse (performance)",
+      "Self-service: centralized data, distributed analytics tools"
+    ]
+  },
+  {
+    "id": 57,
+    "day": 57,
+    "path": "Advanced",
+    "title": "IoT & Real-Time Data Streaming",
+    "prerequisites": [
+      7,
+      13,
+      28
+    ],
+    "estimatedTime": 90,
+    "content": "AWS IoT Core for device connectivity, Kinesis Data Streams for streaming, and real-time analytics. Master ingestion, transformation, and action on high-frequency data.",
+    "useCase": "Smart factory IoT: 10k sensors publish metrics (temperature, pressure) 10x/sec via MQTT to IoT Core. Kinesis Streams buffer 100k events/sec. Lambda detects anomalies (real-time alerts), DynamoDB stores for replay.",
+    "pitfalls": [
+      "Device authentication: IoT certificates auto-expire, rotation automation required (Lambda + IoT fleet provisioning).",
+      "Kinesis stream provisioning: over-provision for peak (waste money), under-provision causes blocking. Auto-scaling helps.",
+      "Cold storage strategy: keep hot data in Kinesis (24hr default), but after 1 day → S3 (S3 Lambda trigger + Glue integration).",
+      "Message parsing complexity: heterogeneous devices send different formats. Central parsing layer + schema validation required.",
+      "Latency vs consistency: streaming data can lag 1-5s vs on-prem systems (millisecond precision). Know SLA."
+    ],
+    "relatedServices": [
+      "iot-core",
+      "kinesis",
+      "timestream",
+      "lambda"
+    ],
+    "resources": [
+      {
+        "type": "docs",
+        "title": "AWS IoT Core Guide",
+        "url": "https://docs.aws.amazon.com/iot/latest/developerguide/"
+      },
+      {
+        "type": "docs",
+        "title": "Kinesis Data Streams",
+        "url": "https://docs.aws.amazon.com/kinesis/latest/dev/"
+      },
+      {
+        "type": "whitepaper",
+        "title": "IoT Architecture Patterns",
+        "url": "https://aws.amazon.com/iot/"
+      },
+      {
+        "type": "example",
+        "title": "Real-Time Analytics",
+        "url": "https://docs.aws.amazon.com/kinesis/latest/dev/kinesis-using-api.html"
+      }
+    ],
+    "keyPoints": [
+      "IoT Core: MQTT/HTTPS, 1M+ connections, topic-based routing",
+      "Kinesis: 1000s requests/sec, 24hr retention (extend via DynamoDB)",
+      "Timestream: time-series database optimized for metrics",
+      "Anomaly detection: Kinesis → Lambda → SNS for real-time alerts",
+      "Cost: IoT messages $0.08/million, Kinesis shard $0.36/hour"
+    ]
+  },
+  {
+    "id": 58,
+    "day": 58,
+    "path": "Advanced",
+    "title": "Containerization Beyond ECS/EKS",
+    "prerequisites": [
+      11,
+      12,
+      36
+    ],
+    "estimatedTime": 75,
+    "content": "Advanced container strategies: App Runner, Fargate spot, container security scanning, and image optimization. Master cost reduction and security for containerized workloads.",
+    "useCase": "Startup rapid iteration: App Runner auto-scales from GitHub pushes (no container management), runs on Fargate Spot (70% savings). Trivy scans images for CVEs, blocks deployment if critical found.",
+    "pitfalls": [
+      "Image bloat: base image 900MB, app 100MB, but bloat added gradually (no one notices). Regular audits + linting required.",
+      "Fargate Spot interruption: 2-min notice before termination, some apps not graceful. Checkpoint/restore architecture needed.",
+      "Multi-registry chaos: Docker Hub + ECR + GCR, images scattered. Consolidate on ECR for governance.",
+      "CVE false positives: thousands of low-severity CVEs reported, most unfixable. Policy: ignore < High, auto-upgrade > High.",
+      "Container runtime overhead: Firecracker (CRI-O competitor) slightly faster, but ecosystem smaller. Stick with Docker."
+    ],
+    "relatedServices": [
+      "apprunner",
+      "ecr",
+      "inspector",
+      "container-insights"
+    ],
+    "resources": [
+      {
+        "type": "docs",
+        "title": "App Runner Guide",
+        "url": "https://docs.aws.amazon.com/apprunner/latest/dg/"
+      },
+      {
+        "type": "docs",
+        "title": "ECR Image Scanning",
+        "url": "https://docs.aws.amazon.com/AmazonECR/latest/userguide/image-scanning.html"
+      },
+      {
+        "type": "whitepaper",
+        "title": "Container Security Best Practices",
+        "url": "https://aws.amazon.com/containers/security/"
+      },
+      {
+        "type": "example",
+        "title": "Multi-Stage Docker Builds",
+        "url": "https://docs.aws.amazon.com/AmazonECR/latest/userguide/docker-build.html"
+      }
+    ],
+    "keyPoints": [
+      "App Runner: build + deploy from source directly, no container management",
+      "Fargate Spot: 70% cheaper, 2-min interruption",
+      "ECR scanning: sync with Docker Hub scanning, detects CVEs",
+      "Image optimization: multi-stage builds, minimal base images",
+      "Registry as code: Terraform/CloudFormation for image lifecycle"
+    ]
+  },
+  {
+    "id": 59,
+    "day": 59,
+    "path": "Capstone",
+    "title": "Capstone Project: Design Production Workload",
+    "prerequisites": [
+      5,
+      20,
+      46,
+      56
+    ],
+    "estimatedTime": 180,
+    "content": "Capstone: design a production-ready AWS workload addressing real-world requirements (availability, security, cost, compliance). Present architecture decision document with trade-offs.",
+    "useCase": "SaaS platform design (1M users): Multi-region (us-east-1 active, eu-west-1 standby), RDS Aurora Global Database, Lambda + API Gateway, DynamoDB for sessions (global tables), CloudFront for static assets, S3 for backups. Estimated cost: $20k/month (cost-optimized design passes $100k untested baseline by 5x).",
+    "pitfalls": [
+      "Over-engineering: include every AWS service learned (120 services total). Reality: 80/20 rule, use 20 core services.",
+      "Unrealistic requirements: 99.999% SLA + free tier budget. Clarify priorities (SLA or cost).",
+      "Handwavy architecture: \"Lambda processes everything\" without understanding limits. Validate scalability numbers.",
+      "No failure modes: architecture assumes nothing fails. Include chaos engineering assumptions.",
+      "Design paralysis: perfect is enemy of good, version 1 is sufficient. Refactor in sprints."
+    ],
+    "relatedServices": [
+      "multi-region",
+      "disaster-recovery",
+      "cost-optimization",
+      "security"
+    ],
+    "resources": [
+      {
+        "type": "doc",
+        "title": "Well-Architected Framework",
+        "url": "https://docs.aws.amazon.com/wellarchitected/latest/userguide/"
+      },
+      {
+        "type": "whitepaper",
+        "title": "Reference Architectures",
+        "url": "https://aws.amazon.com/architecture/"
+      },
+      {
+        "type": "example",
+        "title": "AWS Samples",
+        "url": "https://github.com/aws-samples"
+      },
+      {
+        "type": "tool",
+        "title": "Architecture Tool",
+        "url": "https://online.app.lucidchart.com/"
+      }
+    ],
+    "keyPoints": [
+      "Pillars: operational excellence, security, reliability, performance, cost",
+      "Trade-offs: always exist (cost vs latency, simplicity vs features)",
+      "Backup design: design for failure (multi-region, redundancy)",
+      "Phase 1 MVP: MVP should be complete working system, not stripped-down",
+      "Cost estimation: use calculator, assume 2x for overhead/miscalculation"
+    ]
+  },
+  {
+    "id": 60,
+    "day": 60,
+    "path": "Capstone",
+    "title": "Certification Prep & AWS Exams",
+    "prerequisites": [
+      1,
+      20,
+      46,
+      59
+    ],
+    "estimatedTime": 180,
+    "content": "Preparation for AWS certification exams (Solutions Architect Associate/Professional, DevOps Engineer, Security Specialist). Master exam format, study strategies, and hands-on practice for certification success.",
+    "useCase": "Certification journey: Study Solutions Architect Associate (220 difficulty), pass (score 800+). Then Professional (300 difficulty). Hands-on labs reinforce theory. Exam tips: read questions carefully, eliminate obvious wrong answers, flag for review.",
+    "pitfalls": [
+      "Memorization trap: memorize facts vs understand concepts. Questions test concepts, not facts.",
+      "Exam anxiety: time pressure causes test-taking errors. Practice under time constraints.",
+      "Over-studying: diminishing returns after 40hrs study. Lab practice > reading documentation.",
+      "Braindump sites: unreliable, outdated, and cheating risk (deny on resume). Use official practice exams.",
+      "Renewal overhead: AWS certifications valid 3 years, renewal required. Budget time for ongoing learning."
+    ],
+    "relatedServices": [
+      "exam-portal",
+      "practice-tests",
+      "hands-on-labs",
+      "aws-immersion-day"
+    ],
+    "resources": [
+      {
+        "type": "docs",
+        "title": "AWS Certification Home",
+        "url": "https://aws.amazon.com/certification/"
+      },
+      {
+        "type": "exam",
+        "title": "Solutions Architect Associate",
+        "url": "https://aws.amazon.com/certification/certified-solutions-architect-associate/"
+      },
+      {
+        "type": "practice",
+        "title": "Official Practice Exam",
+        "url": "https://aws.amazon.com/certification/practice-exam/"
+      },
+      {
+        "type": "course",
+        "title": "A Cloud Guru / Linux Academy",
+        "url": "https://acloudguru.com/"
+      }
+    ],
+    "keyPoints": [
+      "Associate level: 2-3 years AWS experience recommended",
+      "Professional level: 4+ years experience, deeper knowledge",
+      "Exam format: 65 multiple-choice, 2 hours, 70% to pass",
+      "Topic distribution: varies by exam (Solutions Architect: 20% IAM, 20% compute, 20% storage, etc.)",
+      "Value: credential validates expertise, career advancement, consulting opportunities"
+    ]
+  }
+]
