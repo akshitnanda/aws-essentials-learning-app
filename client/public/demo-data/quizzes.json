@@ -1,0 +1,835 @@
+[
+  {
+    "id": 1,
+    "lessonId": 1,
+    "question": "Your company needs to deploy a globally distributed application with redundancy across multiple locations. Which AWS concept is most critical for this architecture?",
+    "options": [
+      "EC2 pricing models",
+      "Availability Zones and Regions",
+      "IAM policies",
+      "S3 storage classes"
+    ],
+    "answer": "Availability Zones and Regions",
+    "explanation": "Regions provide geographic separation for disaster recovery; AZs within regions enable high availability. This is foundational for global resilience."
+  },
+  {
+    "id": 2,
+    "lessonId": 2,
+    "question": "You need to allow a Lambda function to access an S3 bucket, but only for reading objects. What is the best way to implement this?",
+    "options": [
+      "Attach the AdministratorAccess policy to the Lambda role",
+      "Create an IAM role with an inline policy granting s3:GetObject to the specific bucket",
+      "Add the Lambda function ARN to the S3 bucket ACL",
+      "Use the root account credentials"
+    ],
+    "answer": "Create an IAM role with an inline policy granting s3:GetObject to the specific bucket",
+    "explanation": "This applies the principle of least privilege. The role should only permission GetObject, not all S3 actions, and only on the specific bucket."
+  },
+  {
+    "id": 3,
+    "lessonId": 3,
+    "question": "You have a batch processing workload that runs for 2 hours at 2 AM daily and must finish by 3 AM. Which EC2 purchasing option minimizes cost?",
+    "options": [
+      "On-Demand",
+      "Reserved Instances (1-year)",
+      "Spot Instances",
+      "Dedicated Hosts"
+    ],
+    "answer": "Spot Instances",
+    "explanation": "Spot instances are 70-90% cheaper than on-demand. Since the job has a specific window and is interruptible, Spot is ideal. Reservations only save money for long-term commitments."
+  },
+  {
+    "id": 4,
+    "lessonId": 4,
+    "question": "You are archiving 50 TB of infrequently accessed data to S3. After 90 days, it will never be accessed again. What is the most cost-effective approach?",
+    "options": [
+      "Store everything in S3 Standard",
+      "Store in S3 Glacier Deep Archive from day 1",
+      "Store in S3 Standard, then move to Glacier Instant Retrieval after 30 days",
+      "Store in S3 Intelligent-Tiering with lifecycle policies"
+    ],
+    "answer": "Store in S3 Standard, then move to Glacier Instant Retrieval after 30 days",
+    "explanation": "Glacier Deep Archive has retrieval fees that apply even for 90 days of storage. S3 Standard for 30 days + Intelligent-Tiering or Instant Retrieval for the next 60 days balances cost and compliance."
+  },
+  {
+    "id": 5,
+    "lessonId": 5,
+    "question": "You are deploying a 3-tier application: web tier in public subnet, app tier in private subnet, database in private subnet. How should the private subnets access the internet for updates?",
+    "options": [
+      "Remove them from the private subnet; place them in public",
+      "Use a NAT Gateway in the public subnet",
+      "Use an Internet Gateway attached to the VPC",
+      "Disable internet access; use VPC Endpoints for AWS services"
+    ],
+    "answer": "Use a NAT Gateway in the public subnet",
+    "explanation": "NAT Gateway allows outbound-only traffic from private subnets while blocking inbound. This maintains security while allowing software updates."
+  },
+  {
+    "id": 6,
+    "lessonId": 6,
+    "question": "You need a database that automatically fails over to a standby replica in a different AZ with zero data loss. Which RDS feature provides this?",
+    "options": [
+      "Read Replicas",
+      "Multi-AZ Deployments",
+      "Database snapshots",
+      "RDS Proxy"
+    ],
+    "answer": "Multi-AZ Deployments",
+    "explanation": "Multi-AZ uses synchronous replication to standby. On primary failure, AWS automatically promotes the standby with zero RPO. Async read replicas have some lag."
+  },
+  {
+    "id": 7,
+    "lessonId": 7,
+    "question": "Your DynamoDB table has a partition key of user_id and sort key of timestamp. You need to frequently query all orders from a user within a date range. What optimization is essential?",
+    "options": [
+      "Add a Global Secondary Index",
+      "Increase DynamoDB capacity",
+      "Switch to RDS PostgreSQL",
+      "Use DynamoDB Streams"
+    ],
+    "answer": "Add a Global Secondary Index",
+    "explanation": "The existing key structure supports this query via a standard Query operation. However, if you need different access patterns, GSI can help. The sort key already allows date range queries efficiently."
+  },
+  {
+    "id": 8,
+    "lessonId": 8,
+    "question": "You have a web application that queries customer data frequently from an RDS database. Queries take 200ms each. Adding a cache would reduce this to 1ms. What is the downside of caching everything?",
+    "options": [
+      "Cache cost exceeds database cost",
+      "Cache invalidation challenges and stale data",
+      "ElastiCache does not support SQL",
+      "Cached data must be encrypted separately"
+    ],
+    "answer": "Cache invalidation challenges and stale data",
+    "explanation": "Caching introduces complexity: TTL selection, invalidation on update, and stale reads. Cache-aside and write-through patterns require careful design."
+  },
+  {
+    "id": 9,
+    "lessonId": 9,
+    "question": "You create a Lambda function that processes S3 file uploads. The function sometimes fails with \"TimeoutError\" after 900 seconds. What is the issue?",
+    "options": [
+      "Lambda memory is too low",
+      "Lambda has reached its timeout limit of 15 minutes",
+      "S3 blocked the function for taking too long",
+      "The IAM role lacks s3:GetObject permission"
+    ],
+    "answer": "Lambda has reached its timeout limit of 15 minutes",
+    "explanation": "Lambda max timeout is 15 minutes (900 seconds). For longer jobs, use Step Functions, AWS Batch, or break work into smaller invocations."
+  },
+  {
+    "id": 10,
+    "lessonId": 10,
+    "question": "Your API Gateway endpoint is being hammered by a bot. You want to allow 100 requests per second per User, and block users exceeding 10 requests per second. What should you implement?",
+    "options": [
+      "CloudFront caching",
+      "API throttling and usage plans with API keys",
+      "AWS WAF rate-based rules",
+      "VPC Flow Logs"
+    ],
+    "answer": "API throttling and usage plans with API keys",
+    "explanation": "API Gateway throttling enforces burst and steady-state limits. Usage plans with API keys let you meter per-customer limits. WAF is for application-layer attacks, not per-user rate limiting."
+  },
+  {
+    "id": 11,
+    "lessonId": 11,
+    "question": "Which service will automatically provision and renew TLS certificates for your Application Load Balancer?",
+    "options": [
+      "AWS Certificate Manager",
+      "IAM SSL certificates",
+      "ACM Private CA",
+      "CloudFront SSL"
+    ],
+    "answer": "AWS Certificate Manager",
+    "explanation": "ACM can issue public certificates and integrate with ALB/CloudFront, handling renewals automatically, which simplifies SSL management."
+  },
+  {
+    "id": 12,
+    "lessonId": 12,
+    "question": "You want to run containers without managing EC2 instances. Which ECS launch type should you choose?",
+    "options": [
+      "EC2",
+      "Fargate",
+      "Batch",
+      "EKS"
+    ],
+    "answer": "Fargate",
+    "explanation": "Fargate is a serverless compute engine for containers that removes the need to provision or manage servers."
+  },
+  {
+    "id": 13,
+    "lessonId": 13,
+    "question": "What is a key difference between EKS and ECS?",
+    "options": [
+      "EKS is managed Kubernetes, ECS is AWS-proprietary",
+      "ECS requires external control plane",
+      "EKS only runs on Fargate",
+      "EKS cannot use EC2"
+    ],
+    "answer": "EKS is managed Kubernetes, ECS is AWS-proprietary",
+    "explanation": "EKS offers Kubernetes compatibility whereas ECS uses AWS’s own orchestration; both can run on EC2 or Fargate."
+  },
+  {
+    "id": 14,
+    "lessonId": 14,
+    "question": "Which AWS Developer Tools service is a managed Git repository?",
+    "options": [
+      "CodeBuild",
+      "CodeCommit",
+      "CodeDeploy",
+      "CodePipeline"
+    ],
+    "answer": "CodeCommit",
+    "explanation": "CodeCommit provides source control using Git, integrated with other AWS CI/CD services."
+  },
+  {
+    "id": 15,
+    "lessonId": 15,
+    "question": "Which service provides DNS resolution inside a VPC without requiring internet access?",
+    "options": [
+      "Route 53 private hosted zone",
+      "Amazon DNS Gateway",
+      "VPC Endpoint for Route 53",
+      "Private DHCP option set"
+    ],
+    "answer": "Route 53 private hosted zone",
+    "explanation": "Private hosted zones allow you to manage DNS records that are only visible within one or more VPCs."
+  },
+  {
+    "id": 16,
+    "lessonId": 16,
+    "question": "To distribute traffic across multiple AWS regions for a global application, what feature should you use?",
+    "options": [
+      "Route 53 latency-based routing",
+      "WAF regional ACL",
+      "Global Accelerator",
+      "CloudFront geo restriction"
+    ],
+    "answer": "Route 53 latency-based routing",
+    "explanation": "Latency-based routing directs users to the region that provides the lowest network latency for them, enabling multi-region distribution."
+  },
+  {
+    "id": 17,
+    "lessonId": 17,
+    "question": "Which service centralizes VPC Flow Logs for all accounts in an organization?",
+    "options": [
+      "AWS CloudTrail",
+      "VPC Traffic Mirroring",
+      "Amazon Athena",
+      "AWS Organizations + CloudWatch Logs"
+    ],
+    "answer": "AWS Organizations + CloudWatch Logs",
+    "explanation": "You can create a centralized CloudWatch Logs account and use AWS Organizations to aggregate flow logs across accounts."
+  },
+  {
+    "id": 18,
+    "lessonId": 18,
+    "question": "For cross-account access with KMS, which key type must you create?",
+    "options": [
+      "Customer managed CMK with key policy granting another account",
+      "AWS managed key",
+      "AWS owned key",
+      "KMS alias"
+    ],
+    "answer": "Customer managed CMK with key policy granting another account",
+    "explanation": "Only customer-managed keys allow you to modify the key policy to include principals from other accounts."
+  },
+  {
+    "id": 19,
+    "lessonId": 19,
+    "question": "Which database service provides built-in full-text search on unstructured documents?",
+    "options": [
+      "Amazon OpenSearch Service",
+      "DynamoDB",
+      "RDS MySQL",
+      "Neptune"
+    ],
+    "answer": "Amazon OpenSearch Service",
+    "explanation": "OpenSearch (formerly Elasticsearch) is optimized for full-text search and analytics on semi-structured and unstructured data."
+  },
+  {
+    "id": 20,
+    "lessonId": 20,
+    "question": "If you need to run petabyte-scale ETL jobs, which managed service is designed for that workload?",
+    "options": [
+      "AWS Glue",
+      "Data Pipeline",
+      "Lambda",
+      "Step Functions"
+    ],
+    "answer": "AWS Glue",
+    "explanation": "Glue is a serverless ETL service that can crawl, catalog, and transform massive datasets across S3 and other stores."
+  },
+  {
+    "id": 21,
+    "lessonId": 21,
+    "question": "EFS lifecycle management can automatically move files to which tier?",
+    "options": [
+      "Standard-IA",
+      "One Zone",
+      "Glacier",
+      "S3 Standard"
+    ],
+    "answer": "Standard-IA",
+    "explanation": "EFS Lifecycle Management moves infrequently accessed files to the Infrequent Access (Standard-IA) tier to save cost."
+  },
+  {
+    "id": 22,
+    "lessonId": 22,
+    "question": "Which service provides a fully managed Hadoop/Spark environment?",
+    "options": [
+      "EMR",
+      "Glue",
+      "Batch",
+      "Lambda"
+    ],
+    "answer": "EMR",
+    "explanation": "Amazon EMR offers managed Hadoop, Spark, Presto, and other big data frameworks on EC2."
+  },
+  {
+    "id": 23,
+    "lessonId": 23,
+    "question": "What is Amazonive Replication for RDS meant to achieve?",
+    "options": [
+      "Disaster recovery in another region",
+      "Encryption at rest",
+      "Performance insight",
+      "Cost reports"
+    ],
+    "answer": "Disaster recovery in another region",
+    "explanation": "Cross-region replicas support DR and read scaling; promoting them recovers from regional outages."
+  },
+  {
+    "id": 24,
+    "lessonId": 24,
+    "question": "A CloudWatch alarm can trigger which of the following actions?",
+    "options": [
+      "Auto Scaling action",
+      "Create IAM user",
+      "Modify VPC",
+      "Generate RDS snapshot"
+    ],
+    "answer": "Auto Scaling action",
+    "explanation": "CloudWatch alarms invoke Auto Scaling policies, SNS notifications, and Lambda functions based on thresholds."
+  },
+  {
+    "id": 25,
+    "lessonId": 25,
+    "question": "What does AWS Config track?",
+    "options": [
+      "Resource configuration changes",
+      "Performance metrics",
+      "Billing charges",
+      "User logins"
+    ],
+    "answer": "Resource configuration changes",
+    "explanation": "AWS Config records and evaluates the configuration of your AWS resources over time."
+  },
+  {
+    "id": 26,
+    "lessonId": 26,
+    "question": "Which database service is serverless and automatically scales per request?",
+    "options": [
+      "Aurora Serverless",
+      "RDS MySQL",
+      "DynamoDB",
+      "Redshift"
+    ],
+    "answer": "Aurora Serverless",
+    "explanation": "Aurora Serverless automatically scales compute capacity for Aurora databases based on demand."
+  },
+  {
+    "id": 27,
+    "lessonId": 27,
+    "question": "A VPC endpoint for S3 is represented by what type of resource?",
+    "options": [
+      "Gateway endpoint",
+      "Interface endpoint",
+      "NAT gateway",
+      "Transit gateway"
+    ],
+    "answer": "Gateway endpoint",
+    "explanation": "S3 and DynamoDB use gateway-type VPC endpoints; other services use interface endpoints."
+  },
+  {
+    "id": 28,
+    "lessonId": 28,
+    "question": "Which service lets you label images using built-in workflows?",
+    "options": [
+      "SageMaker Ground Truth",
+      "Rekognition",
+      "Textract",
+      "Comprehend"
+    ],
+    "answer": "SageMaker Ground Truth",
+    "explanation": "Ground Truth is used to build and manage data labeling jobs for ML datasets."
+  },
+  {
+    "id": 29,
+    "lessonId": 29,
+    "question": "In a microservices architecture, what is the purpose of an API Gateway?",
+    "options": [
+      "Central request routing and auth",
+      "Database scaling",
+      "Monitoring EC2 health",
+      "Static website hosting"
+    ],
+    "answer": "Central request routing and auth",
+    "explanation": "API Gateway provides a unified entry point, request validation, authentication/authorization, and routing to backend services."
+  },
+  {
+    "id": 30,
+    "lessonId": 30,
+    "question": "What does Compute Optimizer analyze to make recommendations?",
+    "options": [
+      "Resource utilization metrics",
+      "CloudTrail logs",
+      "Billing data",
+      "IAM policies"
+    ],
+    "answer": "Resource utilization metrics",
+    "explanation": "Compute Optimizer examines CPU, memory, I/O metrics to suggest right-sizing and instance type changes."
+  },
+  {
+    "id": 31,
+    "lessonId": 31,
+    "question": "Aurora Global Database provides what kind of replication?",
+    "options": [
+      "Low-latency cross-region replication",
+      "Synchronous within same region",
+      "Backup to S3",
+      "Serverless scaling"
+    ],
+    "answer": "Low-latency cross-region replication",
+    "explanation": "Aurora Global Database replicates data across regions with typical lag of < 1 second."
+  },
+  {
+    "id": 32,
+    "lessonId": 32,
+    "question": "Which service migrates databases to AWS with minimal downtime?",
+    "options": [
+      "Database Migration Service",
+      "Data Pipeline",
+      "Glue",
+      "EMR"
+    ],
+    "answer": "Database Migration Service",
+    "explanation": "DMS supports homogeneous and heterogeneous migrations with ongoing replication."
+  },
+  {
+    "id": 33,
+    "lessonId": 33,
+    "question": "SCPs in AWS Organizations stand for?",
+    "options": [
+      "Service Control Policies",
+      "Security Compliance Plans",
+      "Service Cost Plans",
+      "Standard Configuration Policies"
+    ],
+    "answer": "Service Control Policies",
+    "explanation": "SCPs define the maximum permissions for accounts within an organization."
+  },
+  {
+    "id": 34,
+    "lessonId": 34,
+    "question": "What feature of KMS allows automatic rotation of a key every year?",
+    "options": [
+      "Key rotation",
+      "Alias tagging",
+      "Key policies",
+      "External key store"
+    ],
+    "answer": "Key rotation",
+    "explanation": "Customer managed keys can have automatic annual rotation enabled."
+  },
+  {
+    "id": 35,
+    "lessonId": 35,
+    "question": "A WAF rate-based rule can block traffic based on what metric?",
+    "options": [
+      "Requests per 5-minute period",
+      "Data transfer size",
+      "CPU utilization",
+      "Number of CloudTrail events"
+    ],
+    "answer": "Requests per 5-minute period",
+    "explanation": "Rate-based rules evaluate the number of requests from a single IP address within a 5-minute window."
+  },
+  {
+    "id": 36,
+    "lessonId": 36,
+    "question": "Which service helps you build CI/CD pipelines across multiple AWS accounts?",
+    "options": [
+      "CodePipeline",
+      "CodeBuild",
+      "CloudFormation",
+      "CloudTrail"
+    ],
+    "answer": "CodePipeline",
+    "explanation": "CodePipeline automates release pipelines and can deploy across accounts using cross-account roles."
+  },
+  {
+    "id": 37,
+    "lessonId": 37,
+    "question": "Glue crawlers build what artifact to describe your data?",
+    "options": [
+      "Data catalog table definitions",
+      "ETL jobs",
+      "IAM roles",
+      "S3 lifecycle policies"
+    ],
+    "answer": "Data catalog table definitions",
+    "explanation": "Crawlers scan data stores and populate the AWS Glue Data Catalog with table schemas."
+  },
+  {
+    "id": 38,
+    "lessonId": 38,
+    "question": "Amazon Lex is used to build which type of application?",
+    "options": [
+      "Chatbots and conversational interfaces",
+      "Mobile games",
+      "Image editors",
+      "Database clients"
+    ],
+    "answer": "Chatbots and conversational interfaces",
+    "explanation": "Lex provides automatic speech recognition and natural language understanding for bots."
+  },
+  {
+    "id": 39,
+    "lessonId": 39,
+    "question": "What is the default retention period for CloudWatch Logs?",
+    "options": [
+      "Never expire (indefinite)",
+      "7 days",
+      "30 days",
+      "90 days"
+    ],
+    "answer": "Never expire (indefinite)",
+    "explanation": "By default CloudWatch Logs never expire unless you configure a retention policy."
+  },
+  {
+    "id": 40,
+    "lessonId": 40,
+    "question": "What does S3 Intelligent-Tiering automatically do?",
+    "options": [
+      "Move objects between access tiers based on usage",
+      "Encrypt objects at rest",
+      "Replicate data cross-region",
+      "Serve static websites"
+    ],
+    "answer": "Move objects between access tiers based on usage",
+    "explanation": "Intelligent-Tiering monitors access patterns and moves objects to the most cost-effective tier."
+  },
+  {
+    "id": 41,
+    "lessonId": 41,
+    "question": "What is a security benefit of using instance profiles for EC2?",
+    "options": [
+      "No credentials stored on the instance",
+      "Better network throughput",
+      "Lower cost",
+      "Automatic patching"
+    ],
+    "answer": "No credentials stored on the instance",
+    "explanation": "Instance profiles supply temporary IAM credentials via the metadata service, eliminating hard-coded keys."
+  },
+  {
+    "id": 42,
+    "lessonId": 42,
+    "question": "Lambda@Edge functions execute in which locations?",
+    "options": [
+      "CloudFront edge locations",
+      "Only in us-east-1",
+      "Within VPC only",
+      "On-premises"
+    ],
+    "answer": "CloudFront edge locations",
+    "explanation": "Lambda@Edge runs code at CloudFront edge caches to customize content closer to viewers."
+  },
+  {
+    "id": 43,
+    "lessonId": 43,
+    "question": "GuardDuty primarily detects which of the following?",
+    "options": [
+      "Malicious activity in AWS accounts",
+      "Infrastructure cost overruns",
+      "IAM policy compliance",
+      "EC2 CPU spikes"
+    ],
+    "answer": "Malicious activity in AWS accounts",
+    "explanation": "GuardDuty analyzes VPC Flow Logs, CloudTrail, and DNS logs for threats."
+  },
+  {
+    "id": 44,
+    "lessonId": 44,
+    "question": "What does SageMaker Model Monitor evaluate?",
+    "options": [
+      "Drift in model inputs or outputs over time",
+      "CPU usage of notebook instances",
+      "S3 bucket permissions",
+      "CloudWatch billing alerts"
+    ],
+    "answer": "Drift in model inputs or outputs over time",
+    "explanation": "Model Monitor detects data or prediction drift to alert when a deployed model degrades."
+  },
+  {
+    "id": 45,
+    "lessonId": 45,
+    "question": "Provisioned concurrency for Lambda helps solve what issue?",
+    "options": [
+      "Cold start latency spikes",
+      "High billing",
+      "Memory leaks",
+      "IAM permissions"
+    ],
+    "answer": "Cold start latency spikes",
+    "explanation": "Provisioned concurrency keeps functions initialized and ready, reducing cold starts."
+  },
+  {
+    "id": 46,
+    "lessonId": 46,
+    "question": "In Organizations, a \"root\" refers to what?",
+    "options": [
+      "The top-level container for accounts",
+      "An EC2 instance with root access",
+      "S3 bucket root directory",
+      "IAM user named root"
+    ],
+    "answer": "The top-level container for accounts",
+    "explanation": "The root in Organizations is the parent of all organizational units and accounts."
+  },
+  {
+    "id": 47,
+    "lessonId": 47,
+    "question": "Lake Formation permissions are enforced on which service?",
+    "options": [
+      "Athena and Redshift Spectrum queries",
+      "IAM identity policies only",
+      "S3 bucket policies only",
+      "EC2 security groups"
+    ],
+    "answer": "Athena and Redshift Spectrum queries",
+    "explanation": "Lake Formation manages access for data lakes used by analytics services like Athena and Redshift Spectrum."
+  },
+  {
+    "id": 48,
+    "lessonId": 48,
+    "question": "Which service specializes in anomaly detection on metrics and logs?",
+    "options": [
+      "Lookout for Metrics",
+      "CloudWatch Insights",
+      "X-Ray",
+      "Inspector"
+    ],
+    "answer": "Lookout for Metrics",
+    "explanation": "Lookout for Metrics automatically identifies anomalies in time-series data."
+  },
+  {
+    "id": 49,
+    "lessonId": 49,
+    "question": "MGN stands for what?",
+    "options": [
+      "Application Migration Service",
+      "Multi-Goal Networking",
+      "Managed Global Namespace",
+      "Memory Generation"
+    ],
+    "answer": "Application Migration Service",
+    "explanation": "MGN is the new name for AWS Server Migration Service, focused on application migrations."
+  },
+  {
+    "id": 50,
+    "lessonId": 50,
+    "question": "A 70/20/10 rule in cost optimization means?",
+    "options": [
+      "70% savings from 20% changes, 10% leftovers",
+      "70% of budget for compute",
+      "20% growth per year",
+      "Only 10% of resources monitored"
+    ],
+    "answer": "70% savings from 20% changes, 10% leftovers",
+    "explanation": "The rule suggests most savings come from a small subset of opportunities, with diminishing returns beyond that."
+  },
+  {
+    "id": 51,
+    "lessonId": 51,
+    "question": "Which tool helps automate evidence collection for audits?",
+    "options": [
+      "AWS Audit Manager",
+      "AWS Config",
+      "CloudWatch Logs",
+      "GuardDuty"
+    ],
+    "answer": "AWS Audit Manager",
+    "explanation": "Audit Manager streamlines collecting and organizing compliance evidence across AWS services."
+  },
+  {
+    "id": 52,
+    "lessonId": 52,
+    "question": "Pilot light DR strategy means?",
+    "options": [
+      "Minimal resources running in standby region",
+      "Full active-active deployment",
+      "Cold storage backup only",
+      "Using pilot instances"
+    ],
+    "answer": "Minimal resources running in standby region",
+    "explanation": "Pilot light keeps core components ready to scale up quickly during failover."
+  },
+  {
+    "id": 53,
+    "lessonId": 53,
+    "question": "Outposts provide what kind of deployment?",
+    "options": [
+      "On-premises AWS hardware managed by AWS",
+      "Edge Lambda in CloudFront Caches",
+      "Serverless compute in core region",
+      "VPN connectivity only"
+    ],
+    "answer": "On-premises AWS hardware managed by AWS",
+    "explanation": "Outposts bring AWS infrastructure and services to your data center."
+  },
+  {
+    "id": 54,
+    "lessonId": 54,
+    "question": "Graviton processors are designed for what?",
+    "options": [
+      "Energy-efficient ARM-based compute",
+      "High-end GPU data science",
+      "Quantum computing experiments",
+      "Storage acceleration"
+    ],
+    "answer": "Energy-efficient ARM-based compute",
+    "explanation": "Graviton CPUs offer improved performance-per-watt for many workloads."
+  },
+  {
+    "id": 55,
+    "lessonId": 55,
+    "question": "A feature store stores what kind of data?",
+    "options": [
+      "ML features for training and inference",
+      "Log files",
+      "IAM credentials",
+      "Billing metrics"
+    ],
+    "answer": "ML features for training and inference",
+    "explanation": "Feature stores centralize and serve model features consistently across training and serving."
+  },
+  {
+    "id": 56,
+    "lessonId": 56,
+    "question": "What is a primary benefit of ELT vs ETL in analytics?",
+    "options": [
+      "Transform after loading to leverage scalable query engines",
+      "Avoid loading data entirely",
+      "Use Lambda for processing",
+      "Encrypt during transport"
+    ],
+    "answer": "Transform after loading to leverage scalable query engines",
+    "explanation": "ELT pushes transformations to the analytics engine (like Athena) after data is already in the lake."
+  },
+  {
+    "id": 57,
+    "lessonId": 57,
+    "question": "IoT Core devices typically authenticate using?",
+    "options": [
+      "X.509 certificates",
+      "IAM user/password",
+      "API keys",
+      "Static IPs"
+    ],
+    "answer": "X.509 certificates",
+    "explanation": "IoT devices use mutual TLS with certificates for strong authentication."
+  },
+  {
+    "id": 58,
+    "lessonId": 58,
+    "question": "App Runner reads source code from which of the following?",
+    "options": [
+      "GitHub or ECR image",
+      "S3 bucket only",
+      "Local disk",
+      "Lambda function"
+    ],
+    "answer": "GitHub or ECR image",
+    "explanation": "App Runner can deploy directly from source code in GitHub or from a container image in ECR."
+  },
+  {
+    "id": 59,
+    "lessonId": 59,
+    "question": "When designing for 99.999% availability, what is often a first step?",
+    "options": [
+      "Identify single points of failure and eliminate them",
+      "Buy insurance",
+      "Deploy to one region only",
+      "Disable monitoring"
+    ],
+    "answer": "Identify single points of failure and eliminate them",
+    "explanation": "High availability demands removing or mitigating every single point that can fail."
+  },
+  {
+    "id": 60,
+    "lessonId": 60,
+    "question": "AWS certification renewal interval is how long?",
+    "options": [
+      "3 years",
+      "1 year",
+      "5 years",
+      "Lifetime"
+    ],
+    "answer": "3 years",
+    "explanation": "AWS certifications are valid for three years before needing renewal."
+  },
+  {
+    "id": 61,
+    "lessonId": 30,
+    "type": "multi",
+    "question": "Which of the following are legitimate cost optimization strategies? (select all that apply)",
+    "options": [
+      "Right-sizing instances",
+      "Deleting CloudTrail logs",
+      "Using Spot Instances",
+      "Encrypting data at rest"
+    ],
+    "correctAnswers": [
+      "Right-sizing instances",
+      "Using Spot Instances"
+    ],
+    "explanation": "Right-sizing and Spot usage reduce cost; deleting CloudTrail logs is a security risk and encryption does not directly lower costs."
+  },
+  {
+    "id": 62,
+    "lessonId": 52,
+    "type": "drag",
+    "question": "Arrange the disaster recovery strategies from fastest RTO to slowest.",
+    "options": [
+      "Pilot Light",
+      "Hot Standby",
+      "Backup & Restore",
+      "Warm Standby"
+    ],
+    "correctOrder": [
+      "Hot Standby",
+      "Warm Standby",
+      "Pilot Light",
+      "Backup & Restore"
+    ],
+    "explanation": "Hot standby has full resources running, warm standby has reduced capacity, pilot light has minimal components, and backup & restore takes the longest."
+  },
+  {
+    "id": 63,
+    "lessonId": 40,
+    "type": "multi",
+    "question": "Select all S3 storage classes suitable for long-term archival (access < once/year).",
+    "options": [
+      "Standard",
+      "Glacier Instant Retrieval",
+      "Glacier Deep Archive",
+      "One Zone-IA"
+    ],
+    "correctAnswers": [
+      "Glacier Instant Retrieval",
+      "Glacier Deep Archive"
+    ],
+    "explanation": "Glacier classes are designed for long-term archival; Standard and One Zone-IA are for more frequent access."
+  }
+]

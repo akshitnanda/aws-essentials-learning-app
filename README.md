@@ -67,6 +67,16 @@ Codespaces workflow:
 
 The best public demo path in Codespaces is still the built-in demo lab mode, since it avoids real AWS credentials entirely.
 
+## Public Demo
+
+This repository is set up to deploy a static demo build to GitHub Pages from the `main` branch.
+
+Expected demo URL:
+
+- `https://akshitnanda.github.io/aws-essentials-learning-app/`
+
+The deployed build uses bundled lesson and quiz data plus the in-browser demo lab mode, so it works without the Express API.
+
 ### 4. Reset content from seed data
 
 ```bash
@@ -134,6 +144,15 @@ The backend validates shape, uniqueness, and quiz-to-lesson references before wr
 - Add a license before publishing if you want others to reuse the code
 - Mention that the project can be launched in GitHub Codespaces for zero local setup
 - Create a clean first commit after `git init`
+
+## Automation
+
+The repo includes:
+
+- CI on pushes and pull requests
+- GitHub Pages deployment for the static demo
+- Dependabot for dependency and workflow updates
+- Markdown link checks for README files
 
 Suggested Git commands:
 

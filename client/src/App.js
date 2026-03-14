@@ -10,8 +10,56 @@ import LabView from './views/LabView';
 import ProgressView from './views/ProgressView';
 
 const ENABLE_SNS_LAB = process.env.REACT_APP_ENABLE_SNS_LAB === 'true';
+const STATIC_DEMO = process.env.REACT_APP_STATIC_DEMO === 'true';
 const EMPTY_LAB_DATA = { s3Buckets: [], ec2Instances: [], dynamoTables: [] };
 const PROGRESS_STORAGE_KEY = 'aws-learn-progress';
+
+function getPublicAssetUrl(path) {
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  const basePath = process.env.PUBLIC_URL || '';
+
+  if (!basePath || basePath === '/') {
+    return normalizedPath;
+  }
+
+  return `${basePath.replace(/\/$/, '')}${normalizedPath}`;
+}
+
+async function loadLessonsData() {
+  const staticUrl = getPublicAssetUrl('/demo-data/lessons.json');
+
+  if (STATIC_DEMO) {
+    const response = await fetch(staticUrl);
+    return response.json();
+  }
+
+  try {
+    const response = await fetch('/api/lessons');
+    return await response.json();
+  } catch (error) {
+    const fallbackResponse = await fetch(staticUrl);
+    return fallbackResponse.json();
+  }
+}
+
+async function loadQuizzesData(lessonId) {
+  const staticUrl = getPublicAssetUrl('/demo-data/quizzes.json');
+
+  if (STATIC_DEMO) {
+    const response = await fetch(staticUrl);
+    const quizzes = await response.json();
+    return quizzes.filter((quiz) => quiz.lessonId === lessonId);
+  }
+
+  try {
+    const response = await fetch(`/api/quizzes?lessonId=${lessonId}`);
+    return await response.json();
+  } catch (error) {
+    const fallbackResponse = await fetch(staticUrl);
+    const quizzes = await fallbackResponse.json();
+    return quizzes.filter((quiz) => quiz.lessonId === lessonId);
+  }
+}
 
 function buildQuizState(quizzes) {
   const initialState = {};
@@ -83,8 +131,7 @@ function App() {
     setLessonsLoading(true);
     setLessonsError('');
 
-    fetch('/api/lessons')
-      .then((response) => response.json())
+    loadLessonsData()
       .then((data) => {
         if (!isMounted) return;
         const sortedLessons = [...data].sort((a, b) => a.day - b.day);
@@ -393,8 +440,7 @@ function App() {
     setQuizLoading(true);
     setQuizError('');
 
-    fetch(`/api/quizzes?lessonId=${lesson.id}`)
-      .then((response) => response.json())
+    loadQuizzesData(lesson.id)
       .then((data) => {
         setQuizzes(data);
         setQuizState(buildQuizState(data));

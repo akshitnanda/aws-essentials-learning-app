@@ -1,0 +1,40 @@
+name: Markdown Links
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "README.md"
+      - "client/README.md"
+      - ".github/markdown-link-check-config.json"
+      - ".github/workflows/markdown-links.yml"
+  pull_request:
+    paths:
+      - "README.md"
+      - "client/README.md"
+      - ".github/markdown-link-check-config.json"
+      - ".github/workflows/markdown-links.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check-links:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Check root README links
+        run: npx markdown-link-check README.md -c .github/markdown-link-check-config.json
+
+      - name: Check client README links
+        run: npx markdown-link-check client/README.md -c .github/markdown-link-check-config.json
