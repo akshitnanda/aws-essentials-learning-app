@@ -1,8 +1,6 @@
 {
   "name": "client",
   "version": "0.1.0",
-  "homepage": ".",
-  "proxy": "http://localhost:5000",
   "private": true,
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.1002.0",
@@ -15,21 +13,16 @@
     "@testing-library/user-event": "^14.6.1",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
-    "react-router-dom": "^7.13.1",
-    "react-scripts": "5.0.1",
-    "web-vitals": "^5.2.0"
+    "react-router-dom": "^7.13.1"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "start": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run"
   },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
+  "overrides": {
+    "picomatch": "^4.0.4"
   },
   "browserslist": {
     "production": [
@@ -44,6 +37,9 @@
     ]
   },
   "devDependencies": {
-    "yaml": "^2.8.2"
+    "@vitejs/plugin-react": "^5.0.4",
+    "jsdom": "^26.1.0",
+    "vite": "^7.1.10",
+    "vitest": "^3.2.4"
   }
 }

@@ -39,13 +39,13 @@ jobs:
       - name: Build static demo
         run: npm --prefix client run build
         env:
-          REACT_APP_STATIC_DEMO: "true"
-          REACT_APP_ENABLE_SNS_LAB: "false"
+          VITE_STATIC_DEMO: "true"
+          VITE_ENABLE_SNS_LAB: "false"
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v4
         with:
-          path: client/build
+          path: client/dist
 
   deploy:
     runs-on: ubuntu-latest

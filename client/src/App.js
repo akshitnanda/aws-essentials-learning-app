@@ -9,20 +9,15 @@ import LessonDetailView from './views/LessonDetailView';
 import LabView from './views/LabView';
 import ProgressView from './views/ProgressView';
 
-const ENABLE_SNS_LAB = process.env.REACT_APP_ENABLE_SNS_LAB === 'true';
-const STATIC_DEMO = process.env.REACT_APP_STATIC_DEMO === 'true';
+const ENABLE_SNS_LAB = import.meta.env.VITE_ENABLE_SNS_LAB === 'true';
+const STATIC_DEMO = import.meta.env.VITE_STATIC_DEMO === 'true';
 const EMPTY_LAB_DATA = { s3Buckets: [], ec2Instances: [], dynamoTables: [] };
 const PROGRESS_STORAGE_KEY = 'aws-learn-progress';
 
 function getPublicAssetUrl(path) {
-  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-  const basePath = process.env.PUBLIC_URL || '';
-
-  if (!basePath || basePath === '/') {
-    return normalizedPath;
-  }
-
-  return `${basePath.replace(/\/$/, '')}${normalizedPath}`;
+  const normalizedPath = path.replace(/^\/+/, '');
+  const basePath = import.meta.env.BASE_URL || '/';
+  return `${basePath.replace(/\/?$/, '/')}${normalizedPath}`;
 }
 
 async function loadLessonsData() {
