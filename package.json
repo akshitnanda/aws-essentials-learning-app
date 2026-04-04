@@ -9,12 +9,16 @@
     "server": "cd server && nodemon index.js --watch .",
     "client": "cd client && npm start",
     "reseed": "npm --prefix server run reseed",
-    "test": "npm --prefix server test && npm --prefix client test -- --watchAll=false"
+    "test": "npm --prefix server test && npm --prefix client test"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
+  "overrides": {
+    "brace-expansion": "^5.0.5",
+    "picomatch": "^2.3.2"
+  },
   "devDependencies": {
     "concurrently": "^9.2.1",
     "kill-port": "^2.0.1",

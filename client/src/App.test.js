@@ -1,8 +1,9 @@
+import { vi } from 'vitest';
 import { act, render, screen } from '@testing-library/react';
 import App from './App';
 
 beforeEach(() => {
-  global.fetch = jest.fn((url) => {
+  global.fetch = vi.fn((url) => {
     if (url === '/api/lessons') {
       return Promise.resolve({
         json: () => Promise.resolve([])
@@ -16,7 +17,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  jest.resetAllMocks();
+  vi.resetAllMocks();
 });
 
 test('renders app header', async () => {
